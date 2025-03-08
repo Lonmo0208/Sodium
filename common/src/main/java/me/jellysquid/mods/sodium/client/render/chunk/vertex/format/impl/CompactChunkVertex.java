@@ -61,7 +61,7 @@ public class CompactChunkVertex implements ChunkVertexType {
                 MemoryUtil.memPutInt(ptr +  4L, packPositionLo(x, y, z));
                 MemoryUtil.memPutInt(ptr +  8L, vertex.color);
                 MemoryUtil.memPutInt(ptr + 12L, packTexture(u, v));
-                MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material, section));
+                MemoryUtil.memPutInt(ptr + 16L, packLightAndData(light, material.bits(), section));
 
                 ptr += STRIDE;
             }

@@ -30,18 +30,18 @@ public class ChunkMeshBufferBuilder {
     }
 
     public void push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
-        this.push(vertices, material.bits());
-    }
-
-    public void push(ChunkVertexEncoder.Vertex[] vertices, int materialBits) {
         if (vertices.length != 4) {
             throw new IllegalArgumentException("Only quad primitives (with 4 vertices) can be pushed");
         }
 
         this.ensureCapacity(4);
 
-        this.encoder.write(MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride),
-                materialBits, vertices, this.sectionIndex);
+        long ptr = MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride);
+
+        for (ChunkVertexEncoder.Vertex vertex : vertices) {
+            ptr = this.encoder.write(ptr, material, new ChunkVertexEncoder.Vertex[] { vertex }, this.sectionIndex);
+        }
+
         this.vertexCount += 4;
     }
 
