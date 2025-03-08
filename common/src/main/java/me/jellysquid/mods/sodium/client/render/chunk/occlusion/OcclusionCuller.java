@@ -45,11 +45,53 @@ public class OcclusionCuller {
                 continue;
             }
 
-            int connections = useOcclusionCulling ? VisibilityEncoding.getConnections(section.getVisibilityData(), section.getIncomingDirections()) : GraphDirectionSet.ALL;
-            connections &= getOutwardDirections(viewport.getChunkCoord(), section);
+            int connections;
 
+            {
+                if (useOcclusionCulling) {
+                    var sectionVisibilityData = section.getVisibilityData();
+
+                    // occlude paths through the section if it's being viewed at an angle where
+                    // the other side can't possibly be seen
+                    sectionVisibilityData &= getAngleVisibilityMask(viewport, section);
+
+                    // When using occlusion culling, we can only traverse into neighbors for which there is a path of
+                    // visibility through this chunk. This is determined by taking all the incoming paths to this chunk and
+                    // creating a union of the outgoing paths from those.
+                    connections = VisibilityEncoding.getConnections(sectionVisibilityData, section.getIncomingDirections());
+                } else {
+                    // Not using any occlusion culling, so traversing in any direction is legal.
+                    connections = GraphDirectionSet.ALL;
+                }
+                // We can only traverse *outwards* from the center of the graph search, so mask off any invalid
+                // directions.
+                connections &= getOutwardDirections(viewport.getChunkCoord(), section);
+            }
             visitNeighbors(writeQueue, section, connections, frame);
         }
+    }
+    private static final long UP_DOWN_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.DOWN, GraphDirection.UP)) | (1L << VisibilityEncoding.bit(GraphDirection.UP, GraphDirection.DOWN));
+    private static final long NORTH_SOUTH_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.NORTH, GraphDirection.SOUTH)) | (1L << VisibilityEncoding.bit(GraphDirection.SOUTH, GraphDirection.NORTH));
+    private static final long WEST_EAST_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.WEST, GraphDirection.EAST)) | (1L << VisibilityEncoding.bit(GraphDirection.EAST, GraphDirection.WEST));
+
+    private static long getAngleVisibilityMask(Viewport viewport, RenderSection section) {
+        var transform = viewport.getTransform();
+        var dx = Math.abs(transform.x - section.getCenterX());
+        var dy = Math.abs(transform.y - section.getCenterY());
+        var dz = Math.abs(transform.z - section.getCenterZ());
+
+        var angleOcclusionMask = 0L;
+        if (dx > dy || dz > dy) {
+            angleOcclusionMask |= UP_DOWN_OCCLUDED;
+        }
+        if (dx > dz || dy > dz) {
+            angleOcclusionMask |= NORTH_SOUTH_OCCLUDED;
+        }
+        if (dy > dx || dz > dx) {
+            angleOcclusionMask |= WEST_EAST_OCCLUDED;
+        }
+
+        return ~angleOcclusionMask;
     }
 
     private static boolean isSectionVisible(RenderSection section, Viewport viewport, float maxDistance) {
