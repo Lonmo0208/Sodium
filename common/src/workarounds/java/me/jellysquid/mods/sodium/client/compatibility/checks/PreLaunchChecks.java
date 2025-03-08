@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Arrays;
 
 /**
  * Performs OpenGL driver validation before the game creates an OpenGL context. This runs during the earliest possible
