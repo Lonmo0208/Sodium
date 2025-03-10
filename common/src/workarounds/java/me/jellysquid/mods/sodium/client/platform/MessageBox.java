@@ -21,7 +21,7 @@ import java.util.Objects;
 public class MessageBox {
     private static final @Nullable MessageBoxImpl IMPL = MessageBoxImpl.chooseImpl();
 
-    public static void showMessageBox(NativeWindowHandle window,
+    public static void showMessageBox(@Nullable Window window,
                                       IconType icon, String title,
                                       String description,
                                       @Nullable String helpUrl)
@@ -42,17 +42,33 @@ public class MessageBox {
             }
         }
 
-        void showMessageBox(NativeWindowHandle window,
+        void showMessageBox(@Nullable Window window,
                             IconType icon, String title,
                             String description,
                             @Nullable String helpUrl);
     }
 
+    private static class TFDMessageBoxImpl implements MessageBoxImpl {
+        // This adds information about how to open the help box, since we cannot change the buttons.
+        private static final String NOTICE = "\n\nFor more information, click OK; otherwise, click Cancel.";
 
+        @Override
+        public void showMessageBox(@Nullable Window window, IconType icon, String title, String description, @Nullable String helpUrl) {
+            boolean clicked = TinyFileDialogs.tinyfd_messageBox(title, helpUrl == null ? description : description + NOTICE, helpUrl == null ? "ok" : "okcancel", icon.name().toLowerCase(Locale.ROOT), false);
+
+            if (clicked && helpUrl != null) {
+                try {
+                    Desktop.getDesktop().browse(URI.create(helpUrl));
+                } catch (IOException e) {
+                    System.out.println("Failed to open! Giving up.");
+                }
+            }
+        }
+    }
 
     private static class WindowsMessageBoxImpl implements MessageBoxImpl {
         @Override
-        public void showMessageBox(NativeWindowHandle window,
+        public void showMessageBox(@Nullable Window window,
                                    IconType icon, String title,
                                    String description,
                                    @Nullable String helpUrl) {
@@ -77,7 +93,7 @@ public class MessageBox {
             final long hWndOwner;
 
             if (window != null) {
-                hWndOwner = window.getWin32Handle();
+                hWndOwner = GLFWNativeWin32.glfwGetWin32Window(window.getWindow());
             } else {
                 hWndOwner = MemoryUtil.NULL;
             }

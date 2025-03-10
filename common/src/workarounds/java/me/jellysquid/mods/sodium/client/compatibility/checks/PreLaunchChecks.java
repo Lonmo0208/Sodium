@@ -1,6 +1,5 @@
 package me.jellysquid.mods.sodium.client.compatibility.checks;
 
-import me.jellysquid.mods.sodium.client.platform.PlatformHelper;
 import org.lwjgl.Version;
 
 /**
@@ -47,9 +46,6 @@ public class PreLaunchChecks {
                 .replace("###CURRENT_VERSION###", Version.getVersion())
                 .replace("###REQUIRED_VERSION###", REQUIRED_LWJGL_VERSION)
                 .replace("###ADVICE_STRING###", advice);
-
-        PlatformHelper.showCriticalErrorAndClose(null, "Sodium Renderer - Unsupported LWJGL", message,
-                "https://link.caffeinemc.net/help/sodium/runtime-issue/lwjgl3/gh-2561");
     }
 
     private static boolean isUsingKnownCompatibleLwjglVersion() {

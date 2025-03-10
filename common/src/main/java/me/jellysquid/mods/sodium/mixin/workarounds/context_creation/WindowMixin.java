@@ -2,19 +2,14 @@ package me.jellysquid.mods.sodium.mixin.workarounds.context_creation;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.mojang.blaze3d.platform.DisplayData;
-import com.mojang.blaze3d.platform.ScreenManager;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.platform.WindowEventHandler;
 import me.jellysquid.mods.sodium.client.compatibility.checks.ModuleScanner;
 import me.jellysquid.mods.sodium.client.compatibility.checks.PostLaunchChecks;
 import me.jellysquid.mods.sodium.client.compatibility.environment.GLContextInfo;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
-import me.jellysquid.mods.sodium.client.platform.NativeWindowHandle;
 import me.jellysquid.mods.sodium.client.services.PlatformInfoAccess;
 import net.minecraft.Util;
-import net.minecraft.Util.*;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GLCapabilities;
@@ -34,44 +29,31 @@ import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
-import static java.awt.SystemColor.window;
-
 
 @Mixin(Window.class)
-public class WindowMixin {    @Shadow
-@Final
-private static Logger LOGGER;
+public class WindowMixin {
+    @Shadow
+    @Final
+    private static Logger LOGGER;
 
     @Unique
     private long wglPrevContext = MemoryUtil.NULL;
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), expect = 0, require = 0)
     private long wrapGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
-        NvidiaWorkarounds.applyEnvironmentChanges();
+        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS);
+
+        if (applyNvidiaWorkarounds) {
+            NvidiaWorkarounds.install();
+        }
 
         try {
             return GLFW.glfwCreateWindow(width, height, title, monitor, share);
         } finally {
-            NvidiaWorkarounds.undoEnvironmentChanges();
+            if (applyNvidiaWorkarounds) {
+                NvidiaWorkarounds.uninstall();
+            }
         }
-    }
-
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL;createCapabilities()Lorg/lwjgl/opengl/GLCapabilities;", shift = At.Shift.AFTER))
-    private void postWindowCreated(WindowEventHandler windowEventHandler, ScreenManager screenManager, DisplayData displayData, String string, String string2, CallbackInfo ci) {
-        GLContextInfo context = GLContextInfo.create();
-        LOGGER.info("OpenGL Vendor: {}", context.vendor());
-        LOGGER.info("OpenGL Renderer: {}", context.renderer());
-        LOGGER.info("OpenGL Version: {}", context.version());
-
-        // Capture the current WGL context so that we can detect it being replaced later.
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            this.wglPrevContext = WGL.wglGetCurrentContext();
-        } else {
-            this.wglPrevContext = MemoryUtil.NULL;
-        }
-
-        PostLaunchChecks.onContextInitialized((NativeWindowHandle) this, context);
-        ModuleScanner.checkModules((NativeWindowHandle) this);
     }
 
     @SuppressWarnings("all")
@@ -113,8 +95,8 @@ private static Logger LOGGER;
             this.wglPrevContext = MemoryUtil.NULL;
         }
 
-        PostLaunchChecks.onContextInitialized((NativeWindowHandle) this);
-        ModuleScanner.checkModules((NativeWindowHandle) this);
+        PostLaunchChecks.onContextInitialized();
+        ModuleScanner.checkModules();
 
         return capabilities;
     }
@@ -138,7 +120,7 @@ private static Logger LOGGER;
 
         // Likely, this indicates a module was injected into the current process. We should check that
         // nothing problematic was just installed.
-        ModuleScanner.checkModules((NativeWindowHandle) this);
+        ModuleScanner.checkModules();
 
         // If we didn't find anything problematic (which would have thrown an exception), then let's just record
         // the new context pointer and carry on.
