@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.DefaultedVertexConsumer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.render.immediate.model.BakedModelEncoder;
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
 import net.caffeinemc.mods.sodium.api.vertex.buffer.VertexBufferWriter;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -23,7 +23,9 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
         if (!this.fastFormat) {
             super.putBulkData(matrices, bakedQuad, r, g, b, light, overlay);
 
-            SpriteUtil.markSpriteActive(bakedQuad.getSprite());
+            if (bakedQuad.getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.getSprite());
+            }
 
             return;
         }
@@ -43,7 +45,9 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
         int color = ColorABGR.pack(r, g, b, 1.0f);
         BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay);
 
-        SpriteUtil.markSpriteActive(quad.getSprite());
+        if (bakedQuad.getSprite() != null) {
+            SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.getSprite());
+        }
     }
 
     @Override
@@ -51,7 +55,9 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
         if (!this.fastFormat) {
             super.putBulkData(matrices, bakedQuad, brightnessTable, r, g, b, light, overlay, colorize);
 
-            SpriteUtil.markSpriteActive(bakedQuad.getSprite());
+            if (bakedQuad.getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.getSprite());
+            }
 
             return;
         }
@@ -70,6 +76,8 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer {
 
         BakedModelEncoder.writeQuadVertices(writer, matrices, quad, r, g, b, 1.0f, brightnessTable, colorize, light, overlay);
 
-        SpriteUtil.markSpriteActive(quad.getSprite());
+        if (bakedQuad.getSprite() != null) {
+            SpriteUtil.INSTANCE.markSpriteActive(bakedQuad.getSprite());
+        }
     }
 }

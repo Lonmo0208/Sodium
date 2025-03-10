@@ -37,7 +37,6 @@ import me.jellysquid.mods.sodium.client.render.chunk.translucent_sorting.data.Tr
 import me.jellysquid.mods.sodium.client.render.chunk.translucent_sorting.trigger.CameraMovement;
 import me.jellysquid.mods.sodium.client.render.chunk.translucent_sorting.trigger.SortTriggering;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkMeshFormats;
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
 import me.jellysquid.mods.sodium.client.render.util.RenderAsserts;
 import me.jellysquid.mods.sodium.client.render.viewport.CameraTransform;
 import me.jellysquid.mods.sodium.client.render.viewport.Viewport;
@@ -58,6 +57,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -273,7 +273,7 @@ public class RenderSectionManager {
                 }
 
                 for (TextureAtlasSprite sprite : sprites) {
-                    SpriteUtil.markSpriteActive(sprite);
+                    SpriteUtil.INSTANCE.markSpriteActive(sprite);
                 }
             }
         }

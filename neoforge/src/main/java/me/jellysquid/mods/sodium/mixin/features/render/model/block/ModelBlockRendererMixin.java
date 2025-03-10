@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.jellysquid.mods.sodium.client.model.quad.BakedQuadView;
 import me.jellysquid.mods.sodium.client.render.immediate.model.BakedModelEncoder;
-import me.jellysquid.mods.sodium.client.render.texture.SpriteUtil;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import me.jellysquid.mods.sodium.client.render.vertex.VertexConsumerUtils;
 import me.jellysquid.mods.sodium.client.util.DirectionUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorABGR;
@@ -87,7 +87,9 @@ public class ModelBlockRendererMixin {
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay);
 
-            SpriteUtil.markSpriteActive(quad.getSprite());
+            if (bakedQuad.getSprite() != null) {
+                SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
+            }
         }
     }
 }
