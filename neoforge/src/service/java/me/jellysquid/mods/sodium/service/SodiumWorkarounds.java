@@ -14,9 +14,7 @@ public class SodiumWorkarounds implements GraphicsBootstrapper {
 
     @Override
     public void bootstrap(String[] arguments) {
-        PreLaunchChecks.beforeLWJGLInit();
         GraphicsAdapterProbe.findAdapters();
-        PreLaunchChecks.onGameInit();
         Workarounds.init();
         final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS);
 

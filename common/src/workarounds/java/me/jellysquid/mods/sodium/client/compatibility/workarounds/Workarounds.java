@@ -1,9 +1,11 @@
 package me.jellysquid.mods.sodium.client.compatibility.workarounds;
 
-import me.jellysquid.mods.sodium.client.compatibility.environment.OsUtils;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterInfo;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterProbe;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterVendor;
+import me.jellysquid.mods.sodium.client.compatibility.environment.OsUtils;
+import me.jellysquid.mods.sodium.client.compatibility.workarounds.intel.IntelWorkarounds;
+import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +37,13 @@ public class Workarounds {
         var workarounds = EnumSet.noneOf(Reference.class);
         var operatingSystem = OsUtils.getOs();
 
-        var graphicsAdapters = GraphicsAdapterProbe.getAdapters();
+        if (NvidiaWorkarounds.isNvidiaGraphicsCardPresent()) {
+            workarounds.add(Reference.NVIDIA_THREADED_OPTIMIZATIONS_BROKEN);
+        }
 
-        if (isUsingNvidiaGraphicsCard(operatingSystem, graphicsAdapters)) {
-            workarounds.add(Reference.NVIDIA_THREADED_OPTIMIZATIONS);
+        if (IntelWorkarounds.isUsingIntelGen8OrOlder()) {
+            workarounds.add(Reference.INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED);
+            workarounds.add(Reference.INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE);
         }
 
         if (operatingSystem == OsUtils.OperatingSystem.LINUX) {
@@ -58,11 +63,6 @@ public class Workarounds {
         return Collections.unmodifiableSet(workarounds);
     }
 
-    private static boolean isUsingNvidiaGraphicsCard(OsUtils.OperatingSystem operatingSystem, Collection<? extends GraphicsAdapterInfo> adapters) {
-
-        return (operatingSystem == OsUtils.OperatingSystem.WIN || operatingSystem == OsUtils.OperatingSystem.LINUX) &&
-                adapters.stream().anyMatch(adapter -> adapter.vendor() == GraphicsAdapterVendor.NVIDIA);
-    }
 
     public static boolean isWorkaroundEnabled(Reference id) {
         return ACTIVE_WORKAROUNDS.get()
@@ -75,12 +75,25 @@ public class Workarounds {
          * performance issues and crashes.
          * <a href="https://github.com/CaffeineMC/sodium-fabric/issues/1816">GitHub Issue</a>
          */
-        NVIDIA_THREADED_OPTIMIZATIONS,
-
+        NVIDIA_THREADED_OPTIMIZATIONS_BROKEN,
         /**
          * Requesting a No Error Context causes a crash at startup when using a Wayland session.
          * <a href="https://github.com/CaffeineMC/sodium-fabric/issues/1624">GitHub Issue</a>
          */
         NO_ERROR_CONTEXT_UNSUPPORTED,
+        /**
+         * Intel's graphics driver for Gen8 and older seems to be faulty and causes a crash when calling
+         * glFramebufferBlit after the window loses focus.
+         * <a href="https://github.com/CaffeineMC/sodium/issues/2727">GitHub Issue</a>
+         */
+        INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED,
+        NVIDIA_THREADED_OPTIMIZATIONS,
+        /**
+         * Intel's graphics driver for Gen8 and older does not respect depth comparison rules per the OpenGL
+         * specification, causing block model overlays to Z-fight when the overlay is on a different render pass than
+         * the base model.
+         * <a href="https://github.com/CaffeineMC/sodium/issues/2830">GitHub Issue</a>
+         */
+        INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE
     }
 }
