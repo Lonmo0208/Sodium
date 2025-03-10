@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Experimental
-@ApiStatus.AvailableSince("0.6.0")
+@ApiStatus.AvailableSince("0.6.x")
 @FunctionalInterface
 public interface BlockEntityRenderPredicate<T extends BlockEntity> {
     boolean shouldRender(BlockGetter blockGetter, BlockPos blockPos, T entity);

@@ -63,7 +63,6 @@
     "features.render.immediate.matrix_stack.VertexConsumerMixin",
     "features.render.model.ItemBlockRenderTypesMixin",
     "features.render.model.item.ItemRendererMixin",
-    "features.render.model.block.BlockModelRendererMixin",
     "features.render.particle.SingleQuadParticleMixin",
     "features.render.world.clouds.LevelRendererMixin",
     "features.render.world.sky.ClientLevelMixin",

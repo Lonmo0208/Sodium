@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Experimental
-@ApiStatus.AvailableSince("0.6.0")
+@ApiStatus.AvailableSince("0.6.x")
 public interface BlockEntityRenderHandler {
     BlockEntityRenderHandler INSTANCE = DependencyInjection.load(BlockEntityRenderHandler.class,
             "me.jellysquid.mods.sodium.client.render.chunk.BlockEntityRenderHandlerImpl");
