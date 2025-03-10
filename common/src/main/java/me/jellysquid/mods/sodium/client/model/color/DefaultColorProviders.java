@@ -3,6 +3,7 @@ package me.jellysquid.mods.sodium.client.model.color;
 import me.jellysquid.mods.sodium.client.model.quad.ModelQuadView;
 import me.jellysquid.mods.sodium.client.model.quad.blender.BlendedColorProvider;
 import me.jellysquid.mods.sodium.client.world.LevelSlice;
+import net.caffeinemc.mods.sodium.api.util.ColorARGB;
 import net.minecraft.client.color.block.BlockColor;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.core.BlockPos;
@@ -67,7 +68,7 @@ public class DefaultColorProviders {
 
         @Override
         public void getColors(LevelSlice slice, BlockPos pos, BlockState state, ModelQuadView quad, int[] output) {
-            Arrays.fill(output, this.color.getColor(state, slice, pos, quad.getColorIndex()));
+            Arrays.fill(output, ColorARGB.toABGR(this.color.getColor(state, slice, pos, quad.getColorIndex())));
         }
     }
 }

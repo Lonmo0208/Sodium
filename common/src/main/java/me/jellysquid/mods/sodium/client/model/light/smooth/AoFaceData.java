@@ -4,6 +4,7 @@ import me.jellysquid.mods.sodium.client.model.light.data.LightDataAccess;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.level.LightLayer;
 
 import static me.jellysquid.mods.sodium.client.model.light.data.ArrayLightDataCache.*;
 

@@ -194,4 +194,5 @@ public abstract class LightDataAccess {
     public BlockAndTintGetter getLevel() {
         return this.level;
     }
+
 }

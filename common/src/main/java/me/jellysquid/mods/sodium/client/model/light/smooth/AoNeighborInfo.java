@@ -2,6 +2,7 @@ package me.jellysquid.mods.sodium.client.model.light.smooth;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.world.level.LightLayer;
 
 /**
  * The neighbor information for each face of a block, used when performing smooth lighting in order to calculate
