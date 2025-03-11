@@ -13,6 +13,10 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class OcclusionCuller {
+    private static final long UP_DOWN_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.DOWN, GraphDirection.UP)) | (1L << VisibilityEncoding.bit(GraphDirection.UP, GraphDirection.DOWN));
+    private static final long NORTH_SOUTH_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.NORTH, GraphDirection.SOUTH)) | (1L << VisibilityEncoding.bit(GraphDirection.SOUTH, GraphDirection.NORTH));
+    private static final long WEST_EAST_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.WEST, GraphDirection.EAST)) | (1L << VisibilityEncoding.bit(GraphDirection.EAST, GraphDirection.WEST));
+
     private final Long2ReferenceMap<RenderSection> sections;
     private final Level level;
 
@@ -45,11 +49,40 @@ public class OcclusionCuller {
                 continue;
             }
 
-            int connections = useOcclusionCulling ? VisibilityEncoding.getConnections(section.getVisibilityData(), section.getIncomingDirections()) : GraphDirectionSet.ALL;
+            int connections;
+
+            if (useOcclusionCulling) {
+                var sectionVisibilityData = section.getVisibilityData();
+                sectionVisibilityData &= getAngleVisibilityMask(viewport, section);
+                connections = VisibilityEncoding.getConnections(sectionVisibilityData, section.getIncomingDirections());
+            } else {
+                connections = GraphDirectionSet.ALL;
+            }
+
             connections &= getOutwardDirections(viewport.getChunkCoord(), section);
 
             visitNeighbors(writeQueue, section, connections, frame);
         }
+    }
+
+    private static long getAngleVisibilityMask(Viewport viewport, RenderSection section) {
+        var transform = viewport.getTransform();
+        var dx = Math.abs(transform.x - section.getCenterX());
+        var dy = Math.abs(transform.y - section.getCenterY());
+        var dz = Math.abs(transform.z - section.getCenterZ());
+
+        var angleOcclusionMask = 0L;
+        if (dx > dy || dz > dy) {
+            angleOcclusionMask |= UP_DOWN_OCCLUDED;
+        }
+        if (dx > dz || dy > dz) {
+            angleOcclusionMask |= NORTH_SOUTH_OCCLUDED;
+        }
+        if (dy > dx || dz > dx) {
+            angleOcclusionMask |= WEST_EAST_OCCLUDED;
+        }
+
+        return ~angleOcclusionMask;
     }
 
     private static boolean isSectionVisible(RenderSection section, Viewport viewport, float maxDistance) {
@@ -128,7 +161,8 @@ public class OcclusionCuller {
     }
 
     private static int nearestToZero(int min, int max) {
-        int clamped = Math.max(min, 0);
+        int clamped = 0;
+        if (min > 0) { clamped = min; }
         if (max < 0) { clamped = max; }
         return clamped;
     }
