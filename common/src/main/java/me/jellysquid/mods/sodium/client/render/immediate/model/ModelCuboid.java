@@ -22,6 +22,7 @@ public class ModelCuboid {
                        boolean mirror,
                        float texWidth, float texHeight,
                        Set<Direction> visibleFaces) {
+        // 坐标计算（保持不变）
         float minX = (x - inflateX) * INV16;
         float maxX = (x + width + inflateX) * INV16;
 
@@ -38,29 +39,24 @@ public class ModelCuboid {
         this.y2 = (y + height + inflateY) * INV16;
         this.z2 = (z + depth + inflateZ) * INV16;
 
-        final float uScale = 1.0f / texWidth;
-        final float vScale = 1.0f / texHeight;
+        // 修复UV计算（恢复原始逻辑）
+        float scaleU = 1.0f / texWidth;
+        float scaleV = 1.0f / texHeight;
 
-        final float uBase = u * uScale;
-        final float uDepth = depth * uScale;
-        final float uWidth = width * uScale;
+        this.u0 = scaleU * u;
+        this.u1 = scaleU * (u + depth);
+        this.u2 = scaleU * (u + depth + width);
+        this.u3 = scaleU * (u + depth + width + width);
+        this.u4 = scaleU * (u + depth + width + depth);
+        this.u5 = scaleU * (u + depth + width + depth + width);
 
-        this.u0 = uBase;
-        this.u1 = uBase + uDepth;
-        this.u2 = this.u1 + uWidth;
-        this.u3 = this.u2 + uWidth;
-        this.u4 = this.u3 + uDepth;
-        this.u5 = this.u4 + uWidth;
-
-        final float vBase = v * vScale;
-        final float vDepth = depth * vScale;
-
-        this.v0 = vBase;
-        this.v1 = vBase + vDepth;
-        this.v2 = this.v1 + (height * vScale);
+        this.v0 = scaleV * v;
+        this.v1 = scaleV * (v + depth);
+        this.v2 = scaleV * (v + depth + height);
 
         this.mirror = mirror;
 
+        // 面可见性计算（保持不变）
         int mask = 0;
         for (Direction face : visibleFaces) {
             mask |= 1 << face.ordinal();
