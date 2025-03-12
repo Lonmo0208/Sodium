@@ -15,16 +15,8 @@ public class ModelCuboid {
 
     private static final float INV16 = 1.0f / 16.0f;
 
-    public ModelCuboid(int u, int v,
-                       float x, float y, float z,
-                       float width, float height, float depth,
-                       float inflateX, float inflateY, float inflateZ,
-                       boolean mirror,
-                       float texWidth, float texHeight,
-                       Set<Direction> visibleFaces) {
-        // 坐标计算（保持不变）
-        float minX = (x - inflateX) * INV16;
-        float maxX = (x + width + inflateX) * INV16;
+    public ModelCuboid(int u, int v, float x, float y, float z, float width, float height, float depth, float inflateX, float inflateY, float inflateZ, boolean mirror, float texWidth, float texHeight, Set<Direction> visibleFaces)
+    {float minX = (x - inflateX) * INV16;float maxX = (x + width + inflateX) * INV16;
 
         if (mirror) {
             float temp = maxX;
@@ -39,7 +31,6 @@ public class ModelCuboid {
         this.y2 = (y + height + inflateY) * INV16;
         this.z2 = (z + depth + inflateZ) * INV16;
 
-        // 修复UV计算（恢复原始逻辑）
         float scaleU = 1.0f / texWidth;
         float scaleV = 1.0f / texHeight;
 
@@ -56,7 +47,6 @@ public class ModelCuboid {
 
         this.mirror = mirror;
 
-        // 面可见性计算（保持不变）
         int mask = 0;
         for (Direction face : visibleFaces) {
             mask |= 1 << face.ordinal();
