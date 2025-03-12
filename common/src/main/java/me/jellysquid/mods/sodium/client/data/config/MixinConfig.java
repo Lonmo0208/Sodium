@@ -48,6 +48,8 @@ public abstract class MixinConfig {
 
         this.addMixinRule("features.render", true);
 
+        this.addMixinRule("features.render.compositing", true);
+
         this.addMixinRule("features.render.entity", true);
         this.addMixinRule("features.render.entity.cull", true);
         this.addMixinRule("features.render.entity.shadow", true);
