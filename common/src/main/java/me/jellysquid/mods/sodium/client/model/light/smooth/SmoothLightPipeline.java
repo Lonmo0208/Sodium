@@ -126,6 +126,11 @@ public class SmoothLightPipeline implements LightPipeline {
         out.lm[i] = getLightMapCoord(sl, bl);
     }
 
+
+    /**
+     * Calculates the light data for a quad that does not follow any grid and is not parallel to it's light face.
+     * Flags: !IS_ALIGNED, !IS_PARTIAL, !IS_FULL
+     */
     private void applyIrregularFace(BlockPos blockPos, ModelQuadView quad, QuadLightData out, boolean shade) {
         final float[] w = this.weights;
         final float[] aoResult = out.br;
@@ -157,9 +162,30 @@ public class SmoothLightPipeline implements LightPipeline {
                              BlockPos pos, int vertexIdx, float[] w, boolean shade, float[] results) {
         if (!Mth.equal(0f, axisValue)) {
             Direction face = axisValue > 0 ? positiveDir : negativeDir;
-            AoFaceData fd = gatherInsetFace(pos, vertexIdx, face, shade, x, y, z);
+
+            // 计算 w1（深度）
+            float w1 = AoNeighborInfo.get(face).getDepth(x, y, z);
+
+            // 根据 w1 的值调用 gatherInsetFace 的逻辑
+            AoFaceData fd;
+            if (Mth.equal(w1, 0)) {
+                fd = getCachedFaceData(pos, face, true, shade);
+            } else if (Mth.equal(w1, 1)) {
+                fd = getCachedFaceData(pos, face, false, shade);
+            } else {
+                tmpFace.reset();
+                float w0 = 1 - w1;
+                fd = AoFaceData.weightedMean(
+                        getCachedFaceData(pos, face, true, shade), w0,
+                        getCachedFaceData(pos, face, false, shade), w1,
+                        tmpFace
+                );
+            }
+
+            // 计算权重
             AoNeighborInfo.get(face).calculateCornerWeights(x, y, z, w);
 
+            // 更新结果
             float n = axisValue * axisValue;
             float a = fd.getBlendedShade(w);
             float s = fd.getBlendedSkyLight(w);
@@ -174,18 +200,32 @@ public class SmoothLightPipeline implements LightPipeline {
         }
     }
 
-    private AoFaceData gatherInsetFace(BlockPos pos, int vertexIdx, Direction face, boolean shade, float x, float y, float z) {
-        float depth = AoNeighborInfo.get(face).getDepth(x, y, z);
+    //private AoFaceData gatherInsetFace(BlockPos pos, int vertexIdx, Direction face, boolean shade, float x, float y, float z) {
+        //float depth = AoNeighborInfo.get(face).getDepth(x, y, z);
 
-        if (Mth.equal(depth, 0)) return getCachedFaceData(pos, face, true, shade);
-        if (Mth.equal(depth, 1)) return getCachedFaceData(pos, face, false, shade);
+        //if (Mth.equal(depth, 0)) return getCachedFaceData(pos, face, true, shade);
+        //if (Mth.equal(depth, 1)) return getCachedFaceData(pos, face, false, shade);
 
-        tmpFace.reset();
-        return AoFaceData.weightedMean(
-                getCachedFaceData(pos, face, true, shade), 1 - depth,
-                getCachedFaceData(pos, face, false, shade), depth,
-                tmpFace
-        );
+        //tmpFace.reset();
+        //return AoFaceData.weightedMean(
+                //getCachedFaceData(pos, face, true, shade), 1 - depth,
+                //getCachedFaceData(pos, face, false, shade), depth,
+                //tmpFace
+        //);
+    //}
+
+    private AoFaceData gatherInsetFace(ModelQuadView quad, BlockPos blockPos, int vertexIndex, Direction lightFace, boolean shade) {
+        final float w1 = AoNeighborInfo.get(lightFace).getDepth(quad.getX(vertexIndex), quad.getY(vertexIndex), quad.getZ(vertexIndex));
+
+        if (Mth.equal(w1, 0)) {
+            return getCachedFaceData(blockPos, lightFace, true, shade);
+        } else if (Mth.equal(w1, 1)) {
+            return getCachedFaceData(blockPos, lightFace, false, shade);
+        } else {
+            tmpFace.reset();
+            final float w0 = 1 - w1;
+            return AoFaceData.weightedMean(getCachedFaceData(blockPos, lightFace, true, shade), w0, getCachedFaceData(blockPos, lightFace, false, shade), w1, tmpFace);
+        }
     }
 
     private AoFaceData getCachedFaceData(BlockPos pos, Direction face, boolean offset, boolean shade) {
