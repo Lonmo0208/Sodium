@@ -8,7 +8,7 @@ import net.minecraft.util.Mth;
  * the occlusion of each corner.
  */
 @SuppressWarnings("UnnecessaryLocalVariable")
-enum AoNeighborInfo {
+public enum AoNeighborInfo {
     DOWN(new Direction[] { Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH }, 0.5F) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {
