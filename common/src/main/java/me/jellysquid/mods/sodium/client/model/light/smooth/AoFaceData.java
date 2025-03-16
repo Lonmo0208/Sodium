@@ -161,8 +161,8 @@ class AoFaceData {
         out.ao[2] = in0.ao[2] * w0 + in1.ao[2] * w1;
         out.ao[3] = in0.ao[3] * w0 + in1.ao[3] * w1;
 
-        if (!in0.hasUnpackedLightData()) in0.unpackLightData();
-        if (!in1.hasUnpackedLightData()) in1.unpackLightData();
+        if (in0.hasUnpackedLightData()) in0.unpackLightData();
+        if (in1.hasUnpackedLightData()) in1.unpackLightData();
 
         out.bl[0] = (int) (in0.bl[0] * w0 + in1.bl[0] * w1);
         out.bl[1] = (int) (in0.bl[1] * w0 + in1.bl[1] * w1);
@@ -281,7 +281,7 @@ class AoFaceData {
     }
 
     public boolean hasUnpackedLightData() {
-        return (this.flags & AoCompletionFlags.HAS_UNPACKED_LIGHT_DATA) != 0;
+        return (this.flags & AoCompletionFlags.HAS_UNPACKED_LIGHT_DATA) == 0;
     }
 
     public void reset() {
