@@ -14,9 +14,8 @@ public class ChunkMeshBufferBuilder {
     private final int initialCapacity;
 
     private ByteBuffer buffer;
-    private int vertexCount;
-    private int vertexCapacity;
-
+    private int count;
+    private int capacity;
     private int sectionIndex;
 
     public ChunkMeshBufferBuilder(ChunkVertexType vertexType, int initialCapacity) {
@@ -25,46 +24,42 @@ public class ChunkMeshBufferBuilder {
 
         this.buffer = null;
 
-        this.vertexCapacity = initialCapacity;
+        this.capacity = initialCapacity;
         this.initialCapacity = initialCapacity;
     }
 
     public void push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
-        if (vertices.length != 4) {
-            throw new IllegalArgumentException("Only quad primitives (with 4 vertices) can be pushed");
-        }
+        int vertexCount = vertices.length;
 
-        this.ensureCapacity(4);
+        this.ensureCapacity(vertexCount);
 
-        this.encoder.write(MemoryUtil.memAddress(this.buffer, this.vertexCount * this.stride),
+        this.encoder.write(MemoryUtil.memAddress(this.buffer, this.count * this.stride),
                 material, vertices, this.sectionIndex);
 
-        this.vertexCount += 4;
+        this.count += vertexCount;
     }
 
-    private void ensureCapacity(int vertexCount) {
-        if (this.vertexCount + vertexCount >= this.vertexCapacity) {
-            this.grow(vertexCount);
+    private void ensureCapacity(int required) {
+        if (this.count + required > this.capacity) {
+            this.grow(required);
         }
     }
 
-    private void grow(int vertexCount) {
-        this.reallocate(
-                // The new capacity will at least twice as large
-                Math.max(this.vertexCapacity * 2, this.vertexCapacity + vertexCount)
-        );
+    private void grow(int required) {
+        int newCapacity = Math.max(this.capacity * 2, this.capacity + required);
+        this.setBufferSize(newCapacity);
     }
 
-    private void reallocate(int vertexCount) {
-        this.buffer = MemoryUtil.memRealloc(this.buffer, vertexCount * this.stride);
-        this.vertexCapacity = vertexCount;
+    private void setBufferSize(int newCapacity) {
+        this.buffer = MemoryUtil.memRealloc(this.buffer, newCapacity * this.stride);
+        this.capacity = newCapacity;
     }
 
     public void start(int sectionIndex) {
-        this.vertexCount = 0;
+        this.count = 0;
         this.sectionIndex = sectionIndex;
 
-        this.reallocate(this.initialCapacity);
+        this.setBufferSize(this.initialCapacity);
     }
 
     public void destroy() {
@@ -76,7 +71,7 @@ public class ChunkMeshBufferBuilder {
     }
 
     public boolean isEmpty() {
-        return this.vertexCount == 0;
+        return this.count == 0;
     }
 
     public ByteBuffer slice() {
@@ -84,10 +79,10 @@ public class ChunkMeshBufferBuilder {
             throw new IllegalStateException("No vertex data in buffer");
         }
 
-        return MemoryUtil.memSlice(this.buffer, 0, this.stride * this.vertexCount);
+        return MemoryUtil.memSlice(this.buffer, 0, this.stride * this.count);
     }
 
     public int count() {
-        return this.vertexCount;
+        return this.count;
     }
 }

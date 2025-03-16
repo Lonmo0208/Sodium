@@ -21,7 +21,7 @@ public class VisibilityEncoding {
         return visibilityData;
     }
 
-    static int bit(int from, int to) {
+    public static int bit(int from, int to) {
         return (from * 8) + to;
     }
 

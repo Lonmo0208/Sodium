@@ -3,6 +3,7 @@ package me.jellysquid.mods.sodium.client.compatibility.environment.probe;
 import me.jellysquid.mods.sodium.client.compatibility.environment.GLContextInfo;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public enum GraphicsAdapterVendor {

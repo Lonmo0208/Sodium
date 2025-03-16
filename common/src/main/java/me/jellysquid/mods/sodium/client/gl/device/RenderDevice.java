@@ -20,7 +20,7 @@ public interface RenderDevice {
     void makeActive();
     void makeInactive();
 
-    int getSubTexelPrecisionBits();
     GLCapabilities getCapabilities();
     DeviceFunctions getDeviceFunctions();
+    int getSubTexelPrecisionBits();
 }

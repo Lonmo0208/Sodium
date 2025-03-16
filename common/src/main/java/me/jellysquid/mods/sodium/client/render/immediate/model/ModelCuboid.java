@@ -1,98 +1,73 @@
 package me.jellysquid.mods.sodium.client.render.immediate.model;
 
 import net.minecraft.core.Direction;
-
-import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 
-    public class ModelCuboid {
-        // The ordering needs to be the same as Minecraft, otherwise some core shader replacements
-        // will be unable to identify the facing.
-        public static final int
-                FACE_NEG_Y = 0, // DOWN
-                FACE_POS_Y = 1, // UP
-                FACE_NEG_X = 2, // WEST
-                FACE_NEG_Z = 3, // NORTH
-                FACE_POS_X = 4, // EAST
-                FACE_POS_Z = 5; // SOUTH
-
+public class ModelCuboid {
     public final float x1, y1, z1;
     public final float x2, y2, z2;
+
     public final float u0, u1, u2, u3, u4, u5;
     public final float v0, v1, v2;
 
-    private final int cullBitmask;
+    private final int faces;
     public final boolean mirror;
 
     private static final float INV16 = 1.0f / 16.0f;
+    private static final int[] DIRECTION_MASKS = new int[6];
 
-    public ModelCuboid(int u, int v,
-                   float x1, float y1, float z1,
-                   float sizeX, float sizeY, float sizeZ,
-                   float extraX, float extraY, float extraZ,
-                   boolean mirror,
-                   float textureWidth, float textureHeight,
-                   Set<Direction> renderDirections) {
-    float x2 = x1 + sizeX;
-    float y2 = y1 + sizeY;
-    float z2 = z1 + sizeZ;
-
-    x1 -= extraX;
-    y1 -= extraY;
-    z1 -= extraZ;
-    x2 += extraX;
-    y2 += extraY;
-    z2 += extraZ;
-
-    if (mirror) {
-        float tmp = x2;
-        x2 = x1;
-        x1 = tmp;
-    }
-
-    this.x1 = x1 * INV16;
-    this.y1 = y1 * INV16;
-    this.z1 = z1 * INV16;
-    this.x2 = x2 * INV16;
-    this.y2 = y2 * INV16;
-    this.z2 = z2 * INV16;
-
-    float scaleU = 1.0f / textureWidth;
-    float scaleV = 1.0f / textureHeight;
-
-    this.u0 = scaleU * u;
-    this.u1 = scaleU * (u + sizeZ);
-    this.u2 = scaleU * (u + sizeZ + sizeX);
-    this.u3 = scaleU * (u + sizeZ + sizeX + sizeX);
-    this.u4 = scaleU * (u + sizeZ + sizeX + sizeZ);
-    this.u5 = scaleU * (u + sizeZ + sizeX + sizeZ + sizeX);
-
-    this.v0 = scaleV * v;
-    this.v1 = scaleV * (v + sizeZ);
-    this.v2 = scaleV * (v + sizeZ + sizeY);
-
-    this.mirror = mirror;
-
-        int cullBitmask = 0;
-
-        for (var direction : renderDirections) {
-            cullBitmask |= 1 << getFaceIndex(direction);
-    }
-        this.cullBitmask = cullBitmask;
-    }
-
-        public static int getFaceIndex(@NotNull Direction dir) {
-            return switch (dir) {
-                case DOWN -> FACE_NEG_Y;
-                case UP -> FACE_POS_Y;
-                case NORTH -> FACE_NEG_Z;
-                case SOUTH -> FACE_POS_Z;
-                case WEST -> FACE_NEG_X;
-                case EAST -> FACE_POS_X;
-            };
+    static {
+        for (Direction dir : Direction.values()) {
+            DIRECTION_MASKS[dir.ordinal()] = 1 << dir.ordinal();
         }
+    }
 
+    public ModelCuboid(int u, int v, float x, float y, float z,
+                       float width, float height, float depth,
+                       float inflateX, float inflateY, float inflateZ,
+                       boolean mirror, float texWidth, float texHeight,
+                       Set<Direction> visibleFaces) {
+        float baseX = x * INV16;
+        float scaledWidth = width * INV16;
+        this.x1 = mirror ?
+                (baseX + scaledWidth + inflateX * INV16) :
+                (baseX - inflateX * INV16);
+        this.x2 = mirror ?
+                (baseX - inflateX * INV16) :
+                (baseX + scaledWidth + inflateX * INV16);
 
-public boolean shouldDrawFace(int quadIndex) {
-    return (this.cullBitmask & (1 << quadIndex)) != 0;
-}}
+        this.y1 = (y - inflateY) * INV16;
+        this.z1 = (z - inflateZ) * INV16;
+        this.y2 = (y + height + inflateY) * INV16;
+        this.z2 = (z + depth + inflateZ) * INV16;
+
+        final float scaleU = 1.0f / texWidth;
+        final float scaleV = 1.0f / texHeight;
+
+        final int uDepth = u + (int)depth;
+        final int uDepthWidth = uDepth + (int)width;
+        this.u0 = scaleU * u;
+        this.u1 = scaleU * uDepth;
+        this.u2 = scaleU * uDepthWidth;
+        this.u3 = scaleU * (uDepthWidth + (int)width);
+        this.u4 = scaleU * (uDepthWidth + (int)depth);
+        this.u5 = scaleU * (uDepthWidth + (int)depth + (int)width);
+
+        final int vDepth = v + (int)depth;
+        this.v0 = scaleV * v;
+        this.v1 = scaleV * vDepth;
+        this.v2 = scaleV * (vDepth + (int)height);
+
+        this.mirror = mirror;
+
+        int faceMask = 0;
+        for (Direction face : visibleFaces) {
+            faceMask |= DIRECTION_MASKS[face.ordinal()];
+        }
+        this.faces = faceMask;
+    }
+
+    public boolean shouldDrawFace(int faceIndex) {
+        return (this.faces & DIRECTION_MASKS[faceIndex]) != 0;
+    }
+}

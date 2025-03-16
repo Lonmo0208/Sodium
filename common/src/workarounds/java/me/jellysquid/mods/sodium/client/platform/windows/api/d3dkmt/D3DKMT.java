@@ -1,10 +1,12 @@
 package me.jellysquid.mods.sodium.client.platform.windows.api.d3dkmt;
 
+import com.sun.jna.platform.win32.VersionHelpers;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterInfo;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterVendor;
 import me.jellysquid.mods.sodium.client.platform.windows.WindowsFileVersion;
 import me.jellysquid.mods.sodium.client.platform.windows.api.Gdi32;
 import me.jellysquid.mods.sodium.client.platform.windows.api.version.Version;
+import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
@@ -12,6 +14,7 @@ import org.lwjgl.system.Struct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +22,10 @@ import java.util.List;
 import static me.jellysquid.mods.sodium.client.platform.windows.api.Gdi32.*;
 import static me.jellysquid.mods.sodium.client.platform.windows.api.d3dkmt.D3DKMTQueryAdapterInfoType.WDDM12.*;
 import static org.lwjgl.system.MemoryUtil.memAddress;
+import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 
 public class D3DKMT {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-D3DKMT");
-
 
     public static List<WDDMAdapterInfo> findGraphicsAdapters() {
         if (!Gdi32.isD3DKMTSupported()) {
@@ -116,7 +119,6 @@ public class D3DKMT {
             return info.getUserModeDriverFileName();
         }
     }
-
 
     private static @Nullable WindowsFileVersion queryDriverVersion(String file) {
         var version = Version.getModuleFileVersion(file);

@@ -1,7 +1,6 @@
 package me.jellysquid.mods.sodium.client.gl.device;
 
 import com.mojang.blaze3d.vertex.BufferUploader;
-import me.jellysquid.mods.sodium.client.compatibility.environment.OsUtils;
 import me.jellysquid.mods.sodium.client.gl.array.GlVertexArray;
 import me.jellysquid.mods.sodium.client.gl.buffer.*;
 import me.jellysquid.mods.sodium.client.gl.functions.DeviceFunctions;
@@ -9,6 +8,7 @@ import me.jellysquid.mods.sodium.client.gl.state.GlStateTracker;
 import me.jellysquid.mods.sodium.client.gl.sync.GlFence;
 import me.jellysquid.mods.sodium.client.gl.tessellation.*;
 import me.jellysquid.mods.sodium.client.gl.util.EnumBitField;
+import me.jellysquid.mods.sodium.client.compatibility.environment.OsUtils;
 import org.lwjgl.opengl.*;
 
 import java.nio.ByteBuffer;
@@ -45,9 +45,15 @@ public class GLRenderDevice implements RenderDevice {
         }
     }
 
+
     @Override
     public GLCapabilities getCapabilities() {
         return GL.getCapabilities();
+    }
+
+    @Override
+    public DeviceFunctions getDeviceFunctions() {
+        return this.functions;
     }
 
     @Override
@@ -63,10 +69,6 @@ public class GLRenderDevice implements RenderDevice {
         return 8;
     }
 
-    @Override
-    public DeviceFunctions getDeviceFunctions() {
-        return this.functions;
-    }
 
     private void checkDeviceActive() {
         if (!this.isActive) {

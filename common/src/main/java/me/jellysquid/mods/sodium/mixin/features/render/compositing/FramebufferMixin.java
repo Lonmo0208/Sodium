@@ -1,7 +1,7 @@
 package me.jellysquid.mods.sodium.mixin.features.render.compositing;
 
-import me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds;
 import org.lwjgl.opengl.GL32C;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,6 +19,7 @@ public class FramebufferMixin {
 
     @Shadow
     public int height;
+
 
     /**
      * @author JellySquid

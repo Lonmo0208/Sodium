@@ -69,6 +69,7 @@ sourceSets {
             compileClasspath += api.output
             compileClasspath += workarounds.output
             runtimeClasspath += api.output
+            runtimeClasspath += workarounds.output
         }
     }
 }
@@ -102,6 +103,10 @@ tasks {
         val api = sourceSets.getByName("api")
         from(api.output.classesDirs)
         from(api.output.resourcesDir)
+
+        val workarounds = sourceSets.getByName("workarounds")
+        from(workarounds.output.classesDirs)
+        from(workarounds.output.resourcesDir)
 
         manifest.attributes["Main-Class"] = "net.caffeinemc.mods.sodium.desktop.LaunchWarn"
     }

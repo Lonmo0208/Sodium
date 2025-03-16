@@ -1,15 +1,18 @@
 package me.jellysquid.mods.sodium.client.compatibility.workarounds;
 
+import me.jellysquid.mods.sodium.client.compatibility.environment.OsUtils;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterInfo;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterProbe;
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterVendor;
-import me.jellysquid.mods.sodium.client.compatibility.environment.OsUtils;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.intel.IntelWorkarounds;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -63,7 +66,6 @@ public class Workarounds {
         return Collections.unmodifiableSet(workarounds);
     }
 
-
     public static boolean isWorkaroundEnabled(Reference id) {
         return ACTIVE_WORKAROUNDS.get()
                 .contains(id);
@@ -73,27 +75,29 @@ public class Workarounds {
         /**
          * The NVIDIA driver applies "Threaded Optimizations" when Minecraft is detected, causing severe
          * performance issues and crashes.
-         * <a href="https://github.com/CaffeineMC/sodium-fabric/issues/1816">GitHub Issue</a>
+         * <a href="https://github.com/CaffeineMC/sodium/issues/1816">GitHub Issue</a>
          */
         NVIDIA_THREADED_OPTIMIZATIONS_BROKEN,
+
         /**
          * Requesting a No Error Context causes a crash at startup when using a Wayland session.
-         * <a href="https://github.com/CaffeineMC/sodium-fabric/issues/1624">GitHub Issue</a>
+         * <a href="https://github.com/CaffeineMC/sodium/issues/1624">GitHub Issue</a>
          */
         NO_ERROR_CONTEXT_UNSUPPORTED,
+
         /**
          * Intel's graphics driver for Gen8 and older seems to be faulty and causes a crash when calling
          * glFramebufferBlit after the window loses focus.
          * <a href="https://github.com/CaffeineMC/sodium/issues/2727">GitHub Issue</a>
          */
         INTEL_FRAMEBUFFER_BLIT_CRASH_WHEN_UNFOCUSED,
-        NVIDIA_THREADED_OPTIMIZATIONS,
+
         /**
          * Intel's graphics driver for Gen8 and older does not respect depth comparison rules per the OpenGL
          * specification, causing block model overlays to Z-fight when the overlay is on a different render pass than
          * the base model.
          * <a href="https://github.com/CaffeineMC/sodium/issues/2830">GitHub Issue</a>
          */
-        INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE
+        INTEL_DEPTH_BUFFER_COMPARISON_UNRELIABLE,
     }
 }

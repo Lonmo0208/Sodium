@@ -5,7 +5,6 @@ import org.lwjgl.system.JNI;
 import org.lwjgl.system.SharedLibrary;
 
 import static org.lwjgl.system.APIUtil.apiCreateLibrary;
-import static org.lwjgl.system.APIUtil.apiGetFunctionAddress;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Gdi32 {

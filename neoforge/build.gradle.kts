@@ -40,6 +40,34 @@ sourceSets {
         compileClasspath += main.get().compileClasspath
         compileClasspath += project(":common").sourceSets.getByName("workarounds").output
     }
+
+    service.apply {
+        compileClasspath += main.get().compileClasspath
+        compileClasspath += project(":common").sourceSets.getByName("desktop").output
+    }
+
+    main.get().apply {
+        compileClasspath += project(":common").sourceSets.getByName("desktop").output
+    }
+
+    test.get().apply {
+        compileClasspath += main.get().compileClasspath
+        compileClasspath += project(":common").sourceSets.getByName("desktop").output
+    }
+
+    service.apply {
+        compileClasspath += main.get().compileClasspath
+        compileClasspath += project(":common").sourceSets.getByName("api").output
+    }
+
+    main.get().apply {
+        compileClasspath += project(":common").sourceSets.getByName("api").output
+    }
+
+    test.get().apply {
+        compileClasspath += main.get().compileClasspath
+        compileClasspath += project(":common").sourceSets.getByName("api").output
+    }
 }
 
 repositories {

@@ -15,12 +15,14 @@ public class SodiumWorkarounds implements GraphicsBootstrapper {
     @Override
     public void bootstrap(String[] arguments) {
         GraphicsAdapterProbe.findAdapters();
+        PreLaunchChecks.beforeLWJGLInit();
+        PreLaunchChecks.onGameInit();
         Workarounds.init();
-        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS);
+        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS_BROKEN);
 
         if (applyNvidiaWorkarounds) {
             System.out.println("[Sodium] Applying NVIDIA workarounds earlier on Forge.");
-            NvidiaWorkarounds.install();
+            NvidiaWorkarounds.applyEnvironmentChanges();
         }
     }
 }

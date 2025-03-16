@@ -2,14 +2,13 @@ package me.jellysquid.mods.sodium.client.model.light.smooth;
 
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.LightLayer;
 
 /**
  * The neighbor information for each face of a block, used when performing smooth lighting in order to calculate
  * the occlusion of each corner.
  */
 @SuppressWarnings("UnnecessaryLocalVariable")
-enum AoNeighborInfo {
+public enum AoNeighborInfo {
     DOWN(new Direction[] { Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH }, 0.5F) {
         @Override
         public void calculateCornerWeights(float x, float y, float z, float[] out) {

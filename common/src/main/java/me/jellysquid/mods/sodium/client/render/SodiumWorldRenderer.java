@@ -57,15 +57,14 @@ public class SodiumWorldRenderer {
     private ClientLevel level;
     private int renderDistance;
 
-    private double lastCameraX, lastCameraY, lastCameraZ;
     private Vector3d lastCameraPos;
     private double lastCameraPitch, lastCameraYaw;
     private float lastFogDistance;
-    private Matrix4f lastProjectionMatrix;
 
     private boolean useEntityCulling;
 
     private RenderSectionManager renderSectionManager;
+    private Matrix4f lastProjectionMatrix;
 
     /**
      * @return The SodiumWorldRenderer based on the current dimension
@@ -74,7 +73,7 @@ public class SodiumWorldRenderer {
         var instance = instanceNullable();
 
         if (instance == null) {
-            throw new IllegalStateException("No renderer attached to active world");
+            throw new IllegalStateException("No renderer attached to active level");
         }
 
         return instance;
@@ -189,18 +188,12 @@ public class SodiumWorldRenderer {
         float fogDistance = RenderSystem.getShaderFogEnd();
         Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
 
-        boolean dirty = pos.x != this.lastCameraX || pos.y != this.lastCameraY || pos.z != this.lastCameraZ ||
-                pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance ||
-                !Objects.equals(projectionMatrix, this.lastProjectionMatrix);
-
-        if (dirty) {
-            this.renderSectionManager.markGraphDirty();
-        }
         if (this.lastCameraPos == null) {
             this.lastCameraPos = new Vector3d(pos);
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
-        boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance;
+        boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance ||
+                !Objects.equals(projectionMatrix, this.lastProjectionMatrix);
 
         this.lastCameraPitch = pitch;
         this.lastCameraYaw = yaw;
@@ -210,18 +203,14 @@ public class SodiumWorldRenderer {
         }
 
         this.lastFogDistance = fogDistance;
-        this.lastProjectionMatrix = projectionMatrix;
 
-        profiler.popPush("chunk_update");
         this.renderSectionManager.updateCameraState(pos, camera);
 
-        this.renderSectionManager.updateChunks(updateChunksImmediately);
+        this.lastProjectionMatrix = projectionMatrix;
+
         if (cameraLocationChanged) {
             profiler.popPush("translucent_triggering");
 
-        profiler.popPush("chunk_upload");
-
-        this.renderSectionManager.uploadChunks();
             this.renderSectionManager.processGFNIMovement(new CameraMovement(this.lastCameraPos, pos));
             this.lastCameraPos = new Vector3d(pos);
         }
@@ -232,8 +221,6 @@ public class SodiumWorldRenderer {
             this.renderSectionManager.update(camera, viewport, frame, spectator);
         }
 
-        if (updateChunksImmediately) {
-        profiler.popPush("chunk_upload_immediately");
         profiler.popPush("chunk_update");
 
         this.renderSectionManager.cleanupAndFlip();
@@ -241,8 +228,7 @@ public class SodiumWorldRenderer {
 
         profiler.popPush("chunk_upload");
 
-            this.renderSectionManager.uploadChunks();
-        }
+        this.renderSectionManager.uploadChunks();
 
         profiler.popPush("chunk_render_tick");
 
@@ -458,7 +444,7 @@ public class SodiumWorldRenderer {
     private static final double MAX_ENTITY_CHECK_VOLUME = 16 * 16 * 16 * 15;
 
     /**
-     * Returns whether or not the entity intersects with any visible chunks in the graph.
+     * Returns whether the entity intersects with any visible chunks in the graph.
      * @return True if the entity is visible, otherwise false
      */
     public boolean isEntityVisible(Entity entity) {

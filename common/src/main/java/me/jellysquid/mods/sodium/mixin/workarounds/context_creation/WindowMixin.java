@@ -8,6 +8,7 @@ import me.jellysquid.mods.sodium.client.compatibility.checks.PostLaunchChecks;
 import me.jellysquid.mods.sodium.client.compatibility.environment.GLContextInfo;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.Workarounds;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
+import me.jellysquid.mods.sodium.client.platform.NativeWindowHandle;
 import me.jellysquid.mods.sodium.client.services.PlatformInfoAccess;
 import net.minecraft.Util;
 import org.lwjgl.glfw.GLFW;
@@ -41,62 +42,59 @@ public class WindowMixin {
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwCreateWindow(IILjava/lang/CharSequence;JJ)J"), expect = 0, require = 0)
     private long wrapGlfwCreateWindow(int width, int height, CharSequence title, long monitor, long share) {
-        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS);
-
-        if (applyNvidiaWorkarounds) {
-            NvidiaWorkarounds.install();
-        }
+        NvidiaWorkarounds.applyEnvironmentChanges();
 
         try {
             return GLFW.glfwCreateWindow(width, height, title, monitor, share);
         } finally {
-            if (applyNvidiaWorkarounds) {
-                NvidiaWorkarounds.uninstall();
-            }
+            NvidiaWorkarounds.undoEnvironmentChanges();
         }
     }
 
     @SuppressWarnings("all")
     @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/neoforged/fml/loading/ImmediateWindowHandler;setupMinecraftWindow(Ljava/util/function/IntSupplier;Ljava/util/function/IntSupplier;Ljava/util/function/Supplier;Ljava/util/function/LongSupplier;)J"), expect = 0, require = 0)
     private long wrapGlfwCreateWindowForge(final IntSupplier width, final IntSupplier height, final Supplier<String> title, final LongSupplier monitor, Operation<Long> op) {
-        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS);
+        final boolean applyNvidiaWorkarounds = Workarounds.isWorkaroundEnabled(Workarounds.Reference.NVIDIA_THREADED_OPTIMIZATIONS_BROKEN);
 
         if (applyNvidiaWorkarounds && !PlatformInfoAccess.getInstance().platformHasEarlyLoadingScreen()) {
-            NvidiaWorkarounds.install();
+            NvidiaWorkarounds.applyEnvironmentChanges();
         }
 
         try {
             return op.call(width, height, title, monitor);
         } finally {
-            if (applyNvidiaWorkarounds) {
-                NvidiaWorkarounds.uninstall();
+            if (applyNvidiaWorkarounds && !PlatformInfoAccess.getInstance().platformHasEarlyLoadingScreen()) {
+                NvidiaWorkarounds.undoEnvironmentChanges();
             }
         }
     }
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL;createCapabilities()Lorg/lwjgl/opengl/GLCapabilities;"))
+
+    @Redirect(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lorg/lwjgl/opengl/GL;createCapabilities()Lorg/lwjgl/opengl/GLCapabilities;"
+            )
+    )
     private GLCapabilities postContextReady() {
         GLCapabilities capabilities = GL.createCapabilities();
-
-        GLContextInfo driver = GLContextInfo.create();
-
-        if (driver == null) {
+        GLContextInfo context = GLContextInfo.create();
+        if (context == null) {
             LOGGER.warn("Could not retrieve identifying strings for OpenGL implementation");
         } else {
-            LOGGER.info("OpenGL Vendor: {}", driver.vendor());
-            LOGGER.info("OpenGL Renderer: {}", driver.renderer());
-            LOGGER.info("OpenGL Version: {}", driver.version());
+            LOGGER.info("OpenGL Vendor: {}", context.vendor());
+            LOGGER.info("OpenGL Renderer: {}", context.renderer());
+            LOGGER.info("OpenGL Version: {}", context.version());
         }
 
-        // Capture the current WGL context so that we can detect it being replaced later.
-        if (Util.getPlatform() == Util.OS.WINDOWS) {
-            this.wglPrevContext = WGL.wglGetCurrentContext();
-        } else {
-            this.wglPrevContext = MemoryUtil.NULL;
-        }
+        this.wglPrevContext = (Util.getPlatform() == Util.OS.WINDOWS)
+                ? WGL.wglGetCurrentContext()
+                : MemoryUtil.NULL;
 
-        PostLaunchChecks.onContextInitialized();
-        ModuleScanner.checkModules();
+
+        PostLaunchChecks.onContextInitialized((NativeWindowHandle) this, context);
+        ModuleScanner.checkModules((NativeWindowHandle) this);
 
         return capabilities;
     }
@@ -120,7 +118,7 @@ public class WindowMixin {
 
         // Likely, this indicates a module was injected into the current process. We should check that
         // nothing problematic was just installed.
-        ModuleScanner.checkModules();
+        ModuleScanner.checkModules((NativeWindowHandle) this);
 
         // If we didn't find anything problematic (which would have thrown an exception), then let's just record
         // the new context pointer and carry on.

@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSet;
 import it.unimi.dsi.fastutil.objects.ReferenceSets;
+import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import me.jellysquid.mods.sodium.client.SodiumClientMod;
 import me.jellysquid.mods.sodium.client.gl.device.CommandList;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
@@ -57,7 +58,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3dc;
-import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;

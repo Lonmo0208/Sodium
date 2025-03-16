@@ -13,6 +13,10 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public class OcclusionCuller {
+    private static final long UP_DOWN_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.DOWN, GraphDirection.UP)) | (1L << VisibilityEncoding.bit(GraphDirection.UP, GraphDirection.DOWN));
+    private static final long NORTH_SOUTH_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.NORTH, GraphDirection.SOUTH)) | (1L << VisibilityEncoding.bit(GraphDirection.SOUTH, GraphDirection.NORTH));
+    private static final long WEST_EAST_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.WEST, GraphDirection.EAST)) | (1L << VisibilityEncoding.bit(GraphDirection.EAST, GraphDirection.WEST));
+
     private final Long2ReferenceMap<RenderSection> sections;
     private final Level level;
 
@@ -47,32 +51,19 @@ public class OcclusionCuller {
 
             int connections;
 
-            {
-                if (useOcclusionCulling) {
-                    var sectionVisibilityData = section.getVisibilityData();
-
-                    // occlude paths through the section if it's being viewed at an angle where
-                    // the other side can't possibly be seen
-                    sectionVisibilityData &= getAngleVisibilityMask(viewport, section);
-
-                    // When using occlusion culling, we can only traverse into neighbors for which there is a path of
-                    // visibility through this chunk. This is determined by taking all the incoming paths to this chunk and
-                    // creating a union of the outgoing paths from those.
-                    connections = VisibilityEncoding.getConnections(sectionVisibilityData, section.getIncomingDirections());
-                } else {
-                    // Not using any occlusion culling, so traversing in any direction is legal.
-                    connections = GraphDirectionSet.ALL;
-                }
-                // We can only traverse *outwards* from the center of the graph search, so mask off any invalid
-                // directions.
-                connections &= getOutwardDirections(viewport.getChunkCoord(), section);
+            if (useOcclusionCulling) {
+                var sectionVisibilityData = section.getVisibilityData();
+                sectionVisibilityData &= getAngleVisibilityMask(viewport, section);
+                connections = VisibilityEncoding.getConnections(sectionVisibilityData, section.getIncomingDirections());
+            } else {
+                connections = GraphDirectionSet.ALL;
             }
+
+            connections &= getOutwardDirections(viewport.getChunkCoord(), section);
+
             visitNeighbors(writeQueue, section, connections, frame);
         }
     }
-    private static final long UP_DOWN_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.DOWN, GraphDirection.UP)) | (1L << VisibilityEncoding.bit(GraphDirection.UP, GraphDirection.DOWN));
-    private static final long NORTH_SOUTH_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.NORTH, GraphDirection.SOUTH)) | (1L << VisibilityEncoding.bit(GraphDirection.SOUTH, GraphDirection.NORTH));
-    private static final long WEST_EAST_OCCLUDED = (1L << VisibilityEncoding.bit(GraphDirection.WEST, GraphDirection.EAST)) | (1L << VisibilityEncoding.bit(GraphDirection.EAST, GraphDirection.WEST));
 
     private static long getAngleVisibilityMask(Viewport viewport, RenderSection section) {
         var transform = viewport.getTransform();
@@ -170,7 +161,8 @@ public class OcclusionCuller {
     }
 
     private static int nearestToZero(int min, int max) {
-        int clamped = Math.max(min, 0);
+        int clamped = 0;
+        if (min > 0) { clamped = min; }
         if (max < 0) { clamped = max; }
         return clamped;
     }

@@ -149,11 +149,4 @@ public class NvidiaWorkarounds {
         LOGGER.error("READ ME!");
 
     }
-
-    public static void install() {
-    }
-
-    public static void uninstall() {
-
-    }
 }

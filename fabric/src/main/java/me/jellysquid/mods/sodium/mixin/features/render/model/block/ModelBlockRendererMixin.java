@@ -85,7 +85,7 @@ public class ModelBlockRendererMixin {
 
             BakedModelEncoder.writeQuadVertices(writer, matrices, quad, color, light, overlay);
 
-            if (bakedQuad.getSprite() != null) {
+            if (quad.getSprite() != null) {
                 SpriteUtil.INSTANCE.markSpriteActive(quad.getSprite());
             }
         }
