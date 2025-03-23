@@ -12,4 +12,5 @@ public interface ModelPartData {
 
     boolean isVisible();
     boolean isHidden();
+
 }

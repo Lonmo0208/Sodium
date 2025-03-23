@@ -1,5 +1,6 @@
 package me.jellysquid.mods.sodium.client;
 
+import com.llamalad7.mixinextras.utils.MixinExtrasLogger;
 import me.jellysquid.mods.sodium.client.console.Console;
 import me.jellysquid.mods.sodium.client.console.message.MessageLevel;
 import me.jellysquid.mods.sodium.client.data.fingerprint.FingerprintMeasure;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 public class SodiumClientMod {
+    public static MixinExtrasLogger logger;
     private static SodiumGameOptions CONFIG;
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium");
 

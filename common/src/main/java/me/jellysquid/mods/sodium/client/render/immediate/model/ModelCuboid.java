@@ -1,7 +1,6 @@
 package me.jellysquid.mods.sodium.client.render.immediate.model;
 
 import net.minecraft.core.Direction;
-
 import java.util.Set;
 
 public class ModelCuboid {
@@ -12,68 +11,63 @@ public class ModelCuboid {
     public final float v0, v1, v2;
 
     private final int faces;
-
     public final boolean mirror;
 
-    public ModelCuboid(int u, int v,
-                       float x1, float y1, float z1,
-                       float sizeX, float sizeY, float sizeZ,
-                       float extraX, float extraY, float extraZ,
-                       boolean mirror,
-                       float textureWidth, float textureHeight,
-                       Set<Direction> renderDirections) {
-        float x2 = x1 + sizeX;
-        float y2 = y1 + sizeY;
-        float z2 = z1 + sizeZ;
+    private static final float INV16 = 1.0f / 16.0f;
+    private static final int[] DIRECTION_MASKS = new int[6];
 
-        x1 -= extraX;
-        y1 -= extraY;
-        z1 -= extraZ;
-
-        x2 += extraX;
-        y2 += extraY;
-        z2 += extraZ;
-
-        if (mirror) {
-            float tmp = x2;
-            x2 = x1;
-            x1 = tmp;
+    static {
+        for (Direction dir : Direction.values()) {
+            DIRECTION_MASKS[dir.ordinal()] = 1 << dir.ordinal();
         }
+    }
 
-        this.x1 = x1 / 16.0f;
-        this.y1 = y1 / 16.0f;
-        this.z1 = z1 / 16.0f;
+    public ModelCuboid(int u, int v, float x, float y, float z,
+                       float width, float height, float depth,
+                       float inflateX, float inflateY, float inflateZ,
+                       boolean mirror, float texWidth, float texHeight,
+                       Set<Direction> visibleFaces) {
+        float baseX = x * INV16;
+        float scaledWidth = width * INV16;
+        this.x1 = mirror ?
+                (baseX + scaledWidth + inflateX * INV16) :
+                (baseX - inflateX * INV16);
+        this.x2 = mirror ?
+                (baseX - inflateX * INV16) :
+                (baseX + scaledWidth + inflateX * INV16);
 
-        this.x2 = x2 / 16.0f;
-        this.y2 = y2 / 16.0f;
-        this.z2 = z2 / 16.0f;
+        this.y1 = (y - inflateY) * INV16;
+        this.z1 = (z - inflateZ) * INV16;
+        this.y2 = (y + height + inflateY) * INV16;
+        this.z2 = (z + depth + inflateZ) * INV16;
 
-        var scaleU = 1.0f / textureWidth;
-        var scaleV = 1.0f / textureHeight;
+        final float scaleU = 1.0f / texWidth;
+        final float scaleV = 1.0f / texHeight;
 
-        this.u0 = scaleU * (u);
-        this.u1 = scaleU * (u + sizeZ);
-        this.u2 = scaleU * (u + sizeZ + sizeX);
-        this.u3 = scaleU * (u + sizeZ + sizeX + sizeX);
-        this.u4 = scaleU * (u + sizeZ + sizeX + sizeZ);
-        this.u5 = scaleU * (u + sizeZ + sizeX + sizeZ + sizeX);
+        final int uDepth = u + (int)depth;
+        final int uDepthWidth = uDepth + (int)width;
+        this.u0 = scaleU * u;
+        this.u1 = scaleU * uDepth;
+        this.u2 = scaleU * uDepthWidth;
+        this.u3 = scaleU * (uDepthWidth + (int)width);
+        this.u4 = scaleU * (uDepthWidth + (int)depth);
+        this.u5 = scaleU * (uDepthWidth + (int)depth + (int)width);
 
-        this.v0 = scaleV * (v);
-        this.v1 = scaleV * (v + sizeZ);
-        this.v2 = scaleV * (v + sizeZ + sizeY);
+        final int vDepth = v + (int)depth;
+        this.v0 = scaleV * v;
+        this.v1 = scaleV * vDepth;
+        this.v2 = scaleV * (vDepth + (int)height);
 
         this.mirror = mirror;
 
-        int faces = 0;
-
-        for (var dir : renderDirections) {
-            faces |= 1 << dir.ordinal();
+        int faceMask = 0;
+        for (Direction face : visibleFaces) {
+            faceMask |= DIRECTION_MASKS[face.ordinal()];
         }
-
-        this.faces = faces;
+        this.faces = faceMask;
     }
 
-    public boolean shouldDrawFace(int quadIndex) {
-        return (this.faces & (1 << quadIndex)) != 0;
+    public boolean shouldDrawFace(int faceIndex) {
+        return (this.faces & DIRECTION_MASKS[faceIndex]) != 0;
     }
 }

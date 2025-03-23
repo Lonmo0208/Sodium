@@ -1,7 +1,10 @@
 package me.jellysquid.mods.sodium.client.compatibility.checks;
 
+import me.jellysquid.mods.sodium.client.compatibility.environment.GLContextInfo;
+import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaWorkarounds;
 import me.jellysquid.mods.sodium.client.console.Console;
 import me.jellysquid.mods.sodium.client.console.message.MessageLevel;
+import me.jellysquid.mods.sodium.client.platform.NativeWindowHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +15,10 @@ import org.slf4j.LoggerFactory;
 public class PostLaunchChecks {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-PostlaunchChecks");
 
-    public static void onContextInitialized() {
+    public static void onContextInitialized(NativeWindowHandle window, GLContextInfo context) {
+        GraphicsDriverChecks.postContextInit(window, context);
+        NvidiaWorkarounds.applyContextChanges(context);
+
         // FIXME: This can be determined earlier, but we can't access the GUI classes in pre-launch
         if (isUsingPojavLauncher()) {
             Console.instance().logMessage(MessageLevel.SEVERE, "sodium.console.pojav_launcher", true, 30.0);
@@ -22,7 +28,7 @@ public class PostLaunchChecks {
         }
     }
 
-    // https://github.com/CaffeineMC/sodium-fabric/issues/1916
+    // https://github.com/CaffeineMC/sodium/issues/1916
     private static boolean isUsingPojavLauncher() {
         if (System.getenv("POJAV_RENDERER") != null) {
             LOGGER.warn("Detected presence of environment variable POJAV_LAUNCHER, which seems to indicate we are running on Android");

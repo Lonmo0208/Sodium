@@ -19,8 +19,8 @@ public class CompactChunkVertex implements ChunkVertexType {
             .addElement(ChunkMeshAttribute.LIGHT_MATERIAL_INDEX, 16, GlVertexAttributeFormat.UNSIGNED_BYTE, 4, false, true)
             .build();
 
-    private static final int POSITION_MAX_VALUE = 1 << 20;
-    private static final int TEXTURE_MAX_VALUE = 1 << 15;
+    public static final int POSITION_MAX_VALUE = 1 << 20;
+    public static final int TEXTURE_MAX_VALUE = 1 << 15;
 
     private static final float MODEL_ORIGIN = 8.0f;
     private static final float MODEL_RANGE = 32.0f;
@@ -69,6 +69,7 @@ public class CompactChunkVertex implements ChunkVertexType {
             return ptr;
         };
     }
+
 
     private static int packPositionHi(int x, int y, int z) {
         return  (((x >>> 10) & 0x3FF) <<  0) |

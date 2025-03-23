@@ -18,6 +18,8 @@ import java.util.Map;
 
 public abstract class ShaderChunkRenderer implements ChunkRenderer {
     private final Map<ChunkShaderOptions, GlProgram<ChunkShaderInterface>> programs = new Object2ObjectOpenHashMap<>();
+    private final ResourceLocation opaqueShaderPath = new ResourceLocation("sodium", "blocks/block_layer_opaque");
+    private final ResourceLocation chunkShaderPath = new ResourceLocation("sodium", "chunk_shader");
 
     protected final ChunkVertexType vertexType;
     protected final GlVertexFormat<ChunkMeshAttribute> vertexFormat;
@@ -33,26 +35,17 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
     }
 
     protected GlProgram<ChunkShaderInterface> compileProgram(ChunkShaderOptions options) {
-        GlProgram<ChunkShaderInterface> program = this.programs.get(options);
-
-        if (program == null) {
-            this.programs.put(options, program = this.createShader("blocks/block_layer_opaque", options));
-        }
-
-        return program;
+        return this.programs.computeIfAbsent(options, this::createShader);
     }
 
-    private GlProgram<ChunkShaderInterface> createShader(String path, ChunkShaderOptions options) {
+    private GlProgram<ChunkShaderInterface> createShader(ChunkShaderOptions options) {
         ShaderConstants constants = options.constants();
 
-        GlShader vertShader = ShaderLoader.loadShader(ShaderType.VERTEX,
-                new ResourceLocation("sodium", path + ".vsh"), constants);
-        
-        GlShader fragShader = ShaderLoader.loadShader(ShaderType.FRAGMENT,
-                new ResourceLocation("sodium", path + ".fsh"), constants);
+        GlShader vertShader = ShaderLoader.loadShader(ShaderType.VERTEX, new ResourceLocation(opaqueShaderPath.getNamespace(), opaqueShaderPath.getPath() + ".vsh"), constants);
+        GlShader fragShader = ShaderLoader.loadShader(ShaderType.FRAGMENT, new ResourceLocation(opaqueShaderPath.getNamespace(), opaqueShaderPath.getPath() + ".fsh"), constants);
 
         try {
-            return GlProgram.builder(new ResourceLocation("sodium", "chunk_shader"))
+            return GlProgram.builder(chunkShaderPath)
                     .attachShader(vertShader)
                     .attachShader(fragShader)
                     .bindAttribute("a_PositionHi", ChunkShaderBindingPoints.ATTRIBUTE_POSITION_HI)
@@ -75,8 +68,7 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
         this.activeProgram = this.compileProgram(options);
         this.activeProgram.bind();
-        this.activeProgram.getInterface()
-                .setupState();
+        this.activeProgram.getInterface().setupState();
     }
 
     protected void end(TerrainRenderPass pass) {
@@ -88,8 +80,6 @@ public abstract class ShaderChunkRenderer implements ChunkRenderer {
 
     @Override
     public void delete(CommandList commandList) {
-        this.programs.values()
-                .forEach(GlProgram::delete);
+        this.programs.values().forEach(GlProgram::delete);
     }
-
 }

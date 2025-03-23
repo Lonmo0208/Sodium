@@ -1,3 +1,4 @@
+
 package me.jellysquid.mods.sodium.mixin.core.render.immediate.consumer;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -24,28 +25,15 @@ import java.nio.ByteBuffer;
 
 @Mixin(BufferBuilder.class)
 public abstract class BufferBuilderMixin extends DefaultedVertexConsumer implements VertexBufferWriter, ExtendedBufferBuilder {
-    @Shadow
-    protected abstract void ensureCapacity(int size);
-
-    @Shadow
-    private ByteBuffer buffer;
-
-    @Shadow
-    private int vertices;
-
-    @Shadow
-    private int nextElementByte;
-
-    @Shadow
-    private VertexFormat.Mode mode;
-
-    @Unique
-    private VertexFormatDescription formatDescription;
-
-    @Unique
-    private int vertexStride;
-
-    private SodiumBufferBuilder SodiumBufferBuilder;
+    @Shadow protected abstract void ensureCapacity(int size);
+    @Shadow private ByteBuffer buffer;
+    @Shadow private int vertices;
+    @Shadow private int nextElementByte;
+    @Shadow private VertexFormat.Mode mode;
+    @Unique private VertexFormatDescription formatDescription;
+    @Unique private int vertexStride;
+    @Unique private SodiumBufferBuilder SodiumBufferBuilder;
+    @Unique private VertexSerializerRegistry serializerRegistry;
 
     @Inject(
             method = "switchFormat",
@@ -56,107 +44,62 @@ public abstract class BufferBuilderMixin extends DefaultedVertexConsumer impleme
             )
     )
     private void onFormatChanged(VertexFormat format, CallbackInfo ci) {
-        this.formatDescription = VertexFormatRegistry.instance()
-                .get(format);
+        this.formatDescription = VertexFormatRegistry.instance().get(format);
         this.vertexStride = this.formatDescription.stride();
         this.SodiumBufferBuilder = this.formatDescription.isSimpleFormat() ? new SodiumBufferBuilder(this) : null;
+        this.serializerRegistry = VertexSerializerRegistry.instance();
     }
 
     @Inject(method = { "discard", "reset", "begin" }, at = @At("RETURN"))
     private void resetDelegate(CallbackInfo ci) {
-        if (this.SodiumBufferBuilder != null) {
-            this.SodiumBufferBuilder.reset();
-        }
+        if (this.SodiumBufferBuilder != null) this.SodiumBufferBuilder.reset();
     }
 
-    @Override
-    public ByteBuffer sodium$getBuffer() {
-        return this.buffer;
-    }
-
-    @Override
-    public int sodium$getElementOffset() {
-        return this.nextElementByte;
-    }
-
-    @Override
-    public VertexFormatDescription sodium$getFormatDescription() {
-        return this.formatDescription;
-    }
-
-    @Override
-    public SodiumBufferBuilder sodium$getDelegate() {
-        return this.SodiumBufferBuilder;
-    }
+    @Override public ByteBuffer sodium$getBuffer() { return this.buffer; }
+    @Override public int sodium$getElementOffset() { return this.nextElementByte; }
+    @Override public VertexFormatDescription sodium$getFormatDescription() { return this.formatDescription; }
+    @Override public SodiumBufferBuilder sodium$getDelegate() { return this.SodiumBufferBuilder; }
 
     @Override
     public void sodium$moveToNextVertex() {
         this.vertices++;
         this.nextElementByte += this.vertexStride;
-
         this.ensureCapacity(this.vertexStride);
-
-        if (this.shouldDuplicateVertices()) {
-            this.duplicateVertex();
-        }
+        if (this.shouldDuplicateVertices()) duplicateVertex();
     }
 
-    @Override
-    public boolean sodium$hasDefaultColor() {
-        return this.defaultColorSet;
-    }
+    @Override public boolean sodium$hasDefaultColor() { return this.defaultColorSet; }
 
-    @Unique
-    private boolean shouldDuplicateVertices() {
+    @Unique private boolean shouldDuplicateVertices() {
         return this.mode == VertexFormat.Mode.LINES || this.mode == VertexFormat.Mode.LINE_STRIP;
     }
 
-    @Unique
-    private void duplicateVertex() {
-        MemoryIntrinsics.copyMemory(
-                MemoryUtil.memAddress(this.buffer, this.nextElementByte - this.vertexStride),
-                MemoryUtil.memAddress(this.buffer, this.nextElementByte),
-                this.vertexStride);
-
+    @Unique private void duplicateVertex() {
+        long srcAddr = MemoryUtil.memAddress(this.buffer, this.nextElementByte - this.vertexStride);
+        long dstAddr = MemoryUtil.memAddress(this.buffer, this.nextElementByte);
+        MemoryIntrinsics.copyMemory(srcAddr, dstAddr, this.vertexStride);
         this.nextElementByte += this.vertexStride;
         this.vertices++;
-
         this.ensureCapacity(this.vertexStride);
     }
 
-    @Override
-    public boolean canUseIntrinsics() {
+    @Override public boolean canUseIntrinsics() {
         return this.formatDescription != null && this.formatDescription.isSimpleFormat();
     }
 
     @Override
     public void push(MemoryStack stack, long src, int count, VertexFormatDescription format) {
-        var length = count * this.vertexStride;
-
-        // Ensure that there is always space for 1 more vertex; see BufferBuilder.next()
+        int length = count * this.vertexStride;
         this.ensureCapacity(length + this.vertexStride);
-
-        // The buffer may change in the even, so we need to make sure that the
-        // pointer is retrieved *after* the resize
-        var dst = MemoryUtil.memAddress(this.buffer, this.nextElementByte);
+        long dst = MemoryUtil.memAddress(this.buffer, this.nextElementByte);
 
         if (format == this.formatDescription) {
-            // The layout is the same, so we can just perform a memory copy
-            // The stride of a vertex format is always 4 bytes, so this aligned copy is always safe
             MemoryIntrinsics.copyMemory(src, dst, length);
         } else {
-            // The layout differs, so we need to perform a conversion on the vertex data
-            this.copySlow(src, dst, count, format);
+            this.serializerRegistry.get(format, this.formatDescription).serialize(src, dst, count);
         }
 
         this.vertices += count;
         this.nextElementByte += length;
-    }
-
-    @Unique
-    private void copySlow(long src, long dst, int count, VertexFormatDescription format) {
-        VertexSerializerRegistry.instance()
-                .get(format, this.formatDescription)
-                .serialize(src, dst, count);
     }
 }

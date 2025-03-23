@@ -7,7 +7,7 @@ import net.minecraft.server.packs.FilePackResources;
 import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.PathPackResources;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class ResourcePackScanner {
      * A warning is shown for resource packs which replace the default light.glsl and fog.glsl shaders.
      * Detailed information on shader files replaced by resource packs is printed in the client log.
      */
-    public static void checkIfCoreShaderLoaded(ResourceManager manager) {
+    public static void checkIfCoreShaderLoaded(ReloadableResourceManager manager) {
         var outputs = manager.listPacks()
                 .filter(ResourcePackScanner::isExternalResourcePack)
                 .map(ResourcePackScanner::scanResources)

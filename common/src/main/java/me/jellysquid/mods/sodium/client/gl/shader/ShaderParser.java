@@ -14,7 +14,6 @@ public class ShaderParser {
     public static String parseShader(String src, ShaderConstants constants) {
         List<String> lines = parseShader(src);
         lines.addAll(1, constants.getDefineStrings());
-
         return String.join("\n", lines);
     }
 
@@ -41,7 +40,6 @@ public class ShaderParser {
 
     private static List<String> resolveImport(String line) {
         Matcher matcher = IMPORT_PATTERN.matcher(line);
-
         if (!matcher.matches()) {
             throw new IllegalArgumentException("Malformed import statement (expected format: " + IMPORT_PATTERN + ")");
         }

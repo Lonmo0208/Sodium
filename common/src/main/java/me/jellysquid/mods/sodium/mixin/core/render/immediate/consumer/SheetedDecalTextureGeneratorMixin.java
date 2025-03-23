@@ -26,95 +26,63 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SheetedDecalTextureGenerator.class)
 public class SheetedDecalTextureGeneratorMixin implements VertexBufferWriter {
-    @Shadow
-    @Final
-    private VertexConsumer delegate;
-
-    @Shadow
-    @Final
-    private Matrix3f normalInversePose;
-
-    @Shadow
-    @Final
-    private Matrix4f cameraInversePose;
-
-    @Shadow
-    @Final
-    private float textureScale;
-
-    @Unique
-    private boolean canUseIntrinsics;
-
+    @Shadow @Final private VertexConsumer delegate;
+    @Shadow @Final private Matrix3f normalInversePose;
+    @Shadow @Final private Matrix4f cameraInversePose;
+    @Shadow @Final private float textureScale;
+    @Unique private boolean canUseIntrinsics;
+    @Unique private final Vector3f normal = new Vector3f();
+    @Unique private final Vector4f position = new Vector4f();
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(CallbackInfo ci) {
-        this.canUseIntrinsics = VertexBufferWriter.tryOf(this.delegate) != null;
+private void onInit(CallbackInfo ci) {
+    this.canUseIntrinsics = VertexBufferWriter.tryOf(this.delegate) != null;
+}
+
+@Override public boolean canUseIntrinsics() { return this.canUseIntrinsics; }
+
+@Override
+public void push(MemoryStack stack, long ptr, int count, VertexFormatDescription format) {
+    transform(ptr, count, format, normalInversePose, cameraInversePose, textureScale);
+    VertexBufferWriter.of(this.delegate).push(stack, ptr, count, format);
+}
+
+@Unique
+private void transform(long ptr, int count, VertexFormatDescription format,
+                       Matrix3f inverseNormalMatrix, Matrix4f inverseTextureMatrix, float textureScale) {
+    final long stride = format.stride();
+    final long posOffset = format.getElementOffset(CommonVertexAttribute.POSITION);
+    final long colorOffset = format.getElementOffset(CommonVertexAttribute.COLOR);
+    final long normalOffset = format.getElementOffset(CommonVertexAttribute.NORMAL);
+    final long texOffset = format.getElementOffset(CommonVertexAttribute.TEXTURE);
+    final int color = ColorABGR.pack(1.0f, 1.0f, 1.0f, 1.0f);
+    final long end = ptr + count * stride;
+
+    while (ptr < end) {
+        position.set(
+                MemoryUtil.memGetFloat(ptr + posOffset),
+                MemoryUtil.memGetFloat(ptr + posOffset + 4),
+                MemoryUtil.memGetFloat(ptr + posOffset + 8),
+                1.0f
+        );
+
+        int packedNormal = MemoryUtil.memGetInt(ptr + normalOffset);
+        normal.set(NormI8.unpackX(packedNormal), NormI8.unpackY(packedNormal), NormI8.unpackZ(packedNormal));
+
+        Vector3f transformedNormal = inverseNormalMatrix.transform(normal, new Vector3f());
+        Direction direction = Direction.getNearest(transformedNormal.x(), transformedNormal.y(), transformedNormal.z());
+
+        Vector4f transformedTexture = inverseTextureMatrix.transform(position, new Vector4f());
+        transformedTexture.rotateY(3.1415927F)
+                .rotateX(-1.5707964F)
+                .rotate(direction.getRotation());
+
+        float u = -transformedTexture.x() * textureScale;
+        float v = -transformedTexture.y() * textureScale;
+
+        ColorAttribute.set(ptr + colorOffset, color);
+        TextureAttribute.put(ptr + texOffset, u, v);
+
+        ptr += stride;
     }
-
-    @Override
-    public boolean canUseIntrinsics() {
-        return this.canUseIntrinsics;
-    }
-
-    @Override
-    public void push(MemoryStack stack, long ptr, int count, VertexFormatDescription format) {
-        transform(ptr, count, format,
-                this.normalInversePose, this.cameraInversePose, this.textureScale);
-
-        VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
-    }
-
-    /**
-     * Transforms the overlay UVs element of each vertex to create a perspective-mapped effect.
-     *
-     * @param ptr    The buffer of vertices to transform
-     * @param count  The number of vertices to transform
-     * @param format The format of the vertices
-     * @param inverseNormalMatrix The inverted normal matrix
-     * @param inverseTextureMatrix The inverted texture matrix
-     * @param textureScale The amount which the overlay texture should be adjusted
-     */
-    @Unique
-    private static void transform(long ptr, int count, VertexFormatDescription format,
-                                  Matrix3f inverseNormalMatrix, Matrix4f inverseTextureMatrix, float textureScale) {
-        long stride = format.stride();
-
-        var offsetPosition = format.getElementOffset(CommonVertexAttribute.POSITION);
-        var offsetColor = format.getElementOffset(CommonVertexAttribute.COLOR);
-        var offsetNormal = format.getElementOffset(CommonVertexAttribute.NORMAL);
-        var offsetTexture = format.getElementOffset(CommonVertexAttribute.TEXTURE);
-
-        int color = ColorABGR.pack(1.0f, 1.0f, 1.0f, 1.0f);
-
-        var normal = new Vector3f(Float.NaN);
-        var position = new Vector4f(Float.NaN);
-
-        for (int vertexIndex = 0; vertexIndex < count; vertexIndex++) {
-            position.x = MemoryUtil.memGetFloat(ptr + offsetPosition + 0);
-            position.y = MemoryUtil.memGetFloat(ptr + offsetPosition + 4);
-            position.z = MemoryUtil.memGetFloat(ptr + offsetPosition + 8);
-            position.w = 1.0f;
-
-            int packedNormal = MemoryUtil.memGetInt(ptr + offsetNormal);
-            normal.x = NormI8.unpackX(packedNormal);
-            normal.y = NormI8.unpackY(packedNormal);
-            normal.z = NormI8.unpackZ(packedNormal);
-
-            Vector3f transformedNormal = inverseNormalMatrix.transform(normal);
-            Direction direction = Direction.getNearest(transformedNormal.x(), transformedNormal.y(), transformedNormal.z());
-
-            Vector4f transformedTexture = inverseTextureMatrix.transform(position);
-            transformedTexture.rotateY(3.1415927F);
-            transformedTexture.rotateX(-1.5707964F);
-            transformedTexture.rotate(direction.getRotation());
-
-            float textureU = -transformedTexture.x() * textureScale;
-            float textureV = -transformedTexture.y() * textureScale;
-
-            ColorAttribute.set(ptr + offsetColor, color);
-            TextureAttribute.put(ptr + offsetTexture, textureU, textureV);
-
-            ptr += stride;
-        }
-    }
+}
 }

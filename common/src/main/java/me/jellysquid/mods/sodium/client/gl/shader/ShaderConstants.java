@@ -22,9 +22,7 @@ public class ShaderConstants {
 
         private final HashMap<String, String> constants = new HashMap<>();
 
-        private Builder() {
-
-        }
+        private Builder() {}
 
         public void add(String name) {
             this.add(name, EMPTY_VALUE);
@@ -32,28 +30,19 @@ public class ShaderConstants {
 
         public void add(String name, String value) {
             String prev = this.constants.get(name);
-
             if (prev != null) {
                 throw new IllegalArgumentException("Constant " + name + " is already defined with value " + prev);
             }
-
             this.constants.put(name, value);
         }
 
         public ShaderConstants build() {
             List<String> defines = new ArrayList<>(this.constants.size());
-
             for (Map.Entry<String, String> entry : this.constants.entrySet()) {
                 String key = entry.getKey();
                 String value = entry.getValue();
-
-                if (value.isEmpty()) {
-                    defines.add("#define " + key);
-                } else {
-                    defines.add("#define " + key + " " + value);
-                }
+                defines.add(value.isEmpty() ? "#define " + key : "#define " + key + " " + value);
             }
-
             return new ShaderConstants(Collections.unmodifiableList(defines));
         }
 

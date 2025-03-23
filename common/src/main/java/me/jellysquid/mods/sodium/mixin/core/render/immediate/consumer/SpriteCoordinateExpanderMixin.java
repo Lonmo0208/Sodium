@@ -18,78 +18,40 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(SpriteCoordinateExpander.class)
 public class SpriteCoordinateExpanderMixin implements VertexBufferWriter {
-    @Shadow
-    @Final
-    private VertexConsumer delegate;
+    @Shadow @Final private VertexConsumer delegate;
+    @Unique private boolean canUseIntrinsics;
+    @Unique private float minU, minV, maxU, maxV, w, h;
+@Inject(method = "<init>", at = @At("RETURN"))
+private void onInit(VertexConsumer delegate, TextureAtlasSprite sprite, CallbackInfo ci) {
+    this.minU = sprite.getU0();
+    this.minV = sprite.getV0();
+    this.maxU = sprite.getU1();
+    this.maxV = sprite.getV1();
+    this.w = maxU - minU;
+    this.h = maxV - minV;
+    this.canUseIntrinsics = VertexBufferWriter.tryOf(this.delegate) != null;
+}
 
-    @Unique
-    private boolean canUseIntrinsics;
+@Override public boolean canUseIntrinsics() { return this.canUseIntrinsics; }
 
-    @Unique
-    private float minU, minV;
+@Override
+public void push(MemoryStack stack, long ptr, int count, VertexFormatDescription format) {
+    transform(ptr, count, format, minU, minV, w, h);
+    VertexBufferWriter.of(this.delegate).push(stack, ptr, count, format);
+}
 
-    @Unique
-    private float maxU, maxV;
+@Unique
+private static void transform(long ptr, int count, VertexFormatDescription format,
+                              float minU, float minV, float w, float h) {
+    final long stride = format.stride();
+    final long offset = format.getElementOffset(CommonVertexAttribute.TEXTURE);
+    final long end = ptr + count * stride;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
-    private void onInit(VertexConsumer delegate, TextureAtlasSprite sprite, CallbackInfo ci) {
-        this.minU = sprite.getU0();
-        this.minV = sprite.getV0();
-
-        this.maxU = sprite.getU1();
-        this.maxV = sprite.getV1();
-
-        this.canUseIntrinsics = VertexBufferWriter.tryOf(this.delegate) != null;
+    while (ptr < end) {
+        float u = TextureAttribute.getU(ptr + offset);
+        float v = TextureAttribute.getV(ptr + offset);
+        TextureAttribute.put(ptr + offset, minU + w * u, minV + h * v);
+        ptr += stride;
     }
-
-    @Override
-    public boolean canUseIntrinsics() {
-        return this.canUseIntrinsics;
-    }
-
-    @Override
-    public void push(MemoryStack stack, final long ptr, int count, VertexFormatDescription format) {
-        transform(ptr, count, format,
-                this.minU, this.minV, this.maxU, this.maxV);
-
-        VertexBufferWriter.of(this.delegate)
-                .push(stack, ptr, count, format);
-    }
-
-    /**
-     * Transforms the texture UVs for each vertex from their absolute coordinates into the sprite area specified
-     * by the parameters.
-     *
-     * @param ptr    The buffer of vertices to transform
-     * @param count  The number of vertices to transform
-     * @param format The format of the vertices
-     * @param minU   The minimum X-coordinate of the sprite bounds
-     * @param minV   The minimum Y-coordinate of the sprite bounds
-     * @param maxU   The maximum X-coordinate of the sprite bounds
-     * @param maxV   The maximum Y-coordinate of the sprite bounds
-     */
-    @Unique
-    private static void transform(long ptr, int count, VertexFormatDescription format,
-                                  float minU, float minV, float maxU, float maxV) {
-        long stride = format.stride();
-        long offsetUV = format.getElementOffset(CommonVertexAttribute.TEXTURE);
-
-        // The width/height of the sprite
-        float w = maxU - minU;
-        float h = maxV - minV;
-
-        for (int vertexIndex = 0; vertexIndex < count; vertexIndex++) {
-            // The texture coordinates relative to the sprite bounds
-            float u = TextureAttribute.getU(ptr + offsetUV);
-            float v = TextureAttribute.getV(ptr + offsetUV);
-
-            // The texture coordinates in absolute space on the sprite sheet
-            float ut = minU + (w * u);
-            float vt = minV + (h * v);
-
-            TextureAttribute.put(ptr + offsetUV, ut, vt);
-
-            ptr += stride;
-        }
-    }
+}
 }

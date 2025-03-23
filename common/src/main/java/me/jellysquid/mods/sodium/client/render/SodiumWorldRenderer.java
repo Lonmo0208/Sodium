@@ -39,10 +39,12 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
 import org.joml.Vector3d;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 
@@ -62,6 +64,7 @@ public class SodiumWorldRenderer {
     private boolean useEntityCulling;
 
     private RenderSectionManager renderSectionManager;
+    private Matrix4f lastProjectionMatrix;
 
     /**
      * @return The SodiumWorldRenderer based on the current dimension
@@ -183,12 +186,14 @@ public class SodiumWorldRenderer {
         float pitch = camera.getXRot();
         float yaw = camera.getYRot();
         float fogDistance = RenderSystem.getShaderFogEnd();
+        Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
 
         if (this.lastCameraPos == null) {
             this.lastCameraPos = new Vector3d(pos);
         }
         boolean cameraLocationChanged = !pos.equals(this.lastCameraPos);
-        boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance;
+        boolean cameraAngleChanged = pitch != this.lastCameraPitch || yaw != this.lastCameraYaw || fogDistance != this.lastFogDistance ||
+                !Objects.equals(projectionMatrix, this.lastProjectionMatrix);
 
         this.lastCameraPitch = pitch;
         this.lastCameraYaw = yaw;
@@ -200,6 +205,8 @@ public class SodiumWorldRenderer {
         this.lastFogDistance = fogDistance;
 
         this.renderSectionManager.updateCameraState(pos, camera);
+
+        this.lastProjectionMatrix = projectionMatrix;
 
         if (cameraLocationChanged) {
             profiler.popPush("translucent_triggering");
@@ -437,7 +444,7 @@ public class SodiumWorldRenderer {
     private static final double MAX_ENTITY_CHECK_VOLUME = 16 * 16 * 16 * 15;
 
     /**
-     * Returns whether or not the entity intersects with any visible chunks in the graph.
+     * Returns whether the entity intersects with any visible chunks in the graph.
      * @return True if the entity is visible, otherwise false
      */
     public boolean isEntityVisible(Entity entity) {

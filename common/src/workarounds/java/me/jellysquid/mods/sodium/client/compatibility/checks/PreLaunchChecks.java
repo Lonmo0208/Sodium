@@ -5,6 +5,7 @@ import me.jellysquid.mods.sodium.client.compatibility.environment.probe.Graphics
 import me.jellysquid.mods.sodium.client.compatibility.environment.probe.GraphicsAdapterVendor;
 import me.jellysquid.mods.sodium.client.compatibility.workarounds.nvidia.NvidiaDriverVersion;
 import me.jellysquid.mods.sodium.client.platform.MessageBox;
+import me.jellysquid.mods.sodium.client.platform.PlatformHelper;
 import me.jellysquid.mods.sodium.client.platform.windows.WindowsFileVersion;
 import me.jellysquid.mods.sodium.client.platform.windows.api.d3dkmt.D3DKMT;
 import org.jetbrains.annotations.Nullable;
@@ -21,9 +22,7 @@ public class PreLaunchChecks {
 
     // This string should be determined at compile time, so it can be checked against the runtime version.
     private static final String REQUIRED_LWJGL_VERSION = Version.VERSION_MAJOR + "." + Version.VERSION_MINOR + "." + Version.VERSION_REVISION;
-
     private static final String normalMessage = "You must change the LWJGL version in your launcher to continue. This is usually controlled by the settings for a profile or instance in your launcher.";
-
     private static final String prismMessage = "It appears you are using Prism Launcher to start the game. You can likely fix this problem by opening your instance settings and navigating to the Version section in the sidebar.";
 
     public static void beforeLWJGLInit() {
@@ -163,5 +162,59 @@ public class PreLaunchChecks {
         }
 
         return null;
+    }
+
+    public static void checkEnvironment() {
+        if (BugChecks.ISSUE_2561) {
+            checkLwjglRuntimeVersion();
+        }
+    }
+
+    private static void checkLwjglRuntimeVersion() {
+        if (isUsingKnownCompatibleLwjglVersion()) {
+            return;
+        }
+
+        String advice;
+
+        if (isUsingPrismLauncher()) {
+            advice = """
+                     It appears you are using Prism Launcher to start the game. You can \
+                     likely fix this problem by opening your instance settings and navigating to the Version\
+                     section in the sidebar.""";
+        } else {
+            advice = """
+                     You must change the LWJGL version in your launcher to continue. \
+                     This is usually controlled by the settings for a profile or instance in your launcher.""";
+        }
+
+        String message = """
+                         The game failed to start because the currently active LWJGL version is not \
+                         compatible.
+                         
+                         Installed version: ###CURRENT_VERSION###
+                         Required version: ###REQUIRED_VERSION###
+                         
+                         ###ADVICE_STRING###"""
+                .replace("###CURRENT_VERSION###", Version.getVersion())
+                .replace("###REQUIRED_VERSION###", REQUIRED_LWJGL_VERSION)
+                .replace("###ADVICE_STRING###", advice);
+
+        PlatformHelper.showCriticalErrorAndClose(null, "Sodium Renderer - Unsupported LWJGL", message,
+                "https://link.caffeinemc.net/help/sodium/runtime-issue/lwjgl3/gh-2561");
+    }
+
+    private static boolean isUsingKnownCompatibleLwjglVersion() {
+        return Version.getVersion()
+                .startsWith(REQUIRED_LWJGL_VERSION);
+    }
+
+    private static boolean isUsingPrismLauncher() {
+        return getLauncherBrand()
+                .equalsIgnoreCase("PrismLauncher");
+    }
+
+    private static String getLauncherBrand() {
+        return System.getProperty("minecraft.launcher.brand", "unknown");
     }
 }

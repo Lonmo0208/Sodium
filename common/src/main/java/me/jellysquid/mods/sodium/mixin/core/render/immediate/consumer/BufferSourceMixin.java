@@ -15,24 +15,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class BufferSourceMixin {
     @Inject(method = "getBuffer", at = @At("RETURN"), cancellable = true)
     private void useFasterVertexConsumer(RenderType renderType, CallbackInfoReturnable<VertexConsumer> cir) {
-        if (cir.getReturnValue() instanceof ExtendedBufferBuilder bufferBuilder) {
+        VertexConsumer result = cir.getReturnValue();
+        if (result instanceof ExtendedBufferBuilder bufferBuilder) {
             SodiumBufferBuilder replacement = bufferBuilder.sodium$getDelegate();
-            if (replacement != null) {
-                cir.setReturnValue(replacement);
-            }
+            if (replacement != null) cir.setReturnValue(replacement);
         }
     }
-
-    @ModifyVariable(method = {
-            "method_24213",
-            "lambda$endBatch$0",
-            "m_109916_"
-    }, require = 1, at = @At(value = "LOAD", ordinal = 0))
-    private VertexConsumer changeComparedVertexConsumer(VertexConsumer vertexConsumer) {
-        if (vertexConsumer instanceof SodiumBufferBuilder bufferBuilder) {
-            return bufferBuilder.getOriginalBufferBuilder();
-        } else {
-            return vertexConsumer;
-        }
-    }
+@ModifyVariable(
+        method = {"method_24213", "lambda$endBatch$0", "m_109916_"},
+        require = 1,
+        at = @At(value = "LOAD", ordinal = 0)
+)
+private VertexConsumer changeComparedVertexConsumer(VertexConsumer vertexConsumer) {
+    return (vertexConsumer instanceof SodiumBufferBuilder bufferBuilder)
+            ? bufferBuilder.getOriginalBufferBuilder()
+            : vertexConsumer;
+}
 }

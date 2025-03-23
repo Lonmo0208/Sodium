@@ -125,26 +125,6 @@ public class BakedQuadMixin implements BakedQuadView {
     }
 
     @Override
-    public boolean hasColor() {
-        return BakedQuadView.super.hasColor();
-    }
-
-    @Override
-    public int calculateNormal() {
-        return BakedQuadView.super.calculateNormal();
-    }
-
-    @Override
-    public int getAccurateNormal(int i) {
-        return BakedQuadView.super.getAccurateNormal(i);
-    }
-
-    @Override
-    public float[] getVertices() {
-        return new float[0];
-    }
-
-    @Override
     @Unique(silent = true) // The target class has a function with the same name in a remapped environment
     public boolean hasShade() {
         return this.shade;

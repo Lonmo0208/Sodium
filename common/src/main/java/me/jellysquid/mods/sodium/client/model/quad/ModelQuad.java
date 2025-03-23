@@ -147,9 +147,4 @@ public class ModelQuad implements ModelQuadViewMutable {
     public Direction getLightFace() {
         return this.direction;
     }
-
-    @Override
-    public float[] getVertices() {
-        return new float[0];
-    }
 }

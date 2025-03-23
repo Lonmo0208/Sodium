@@ -4,6 +4,9 @@ import me.jellysquid.mods.sodium.client.gl.shader.ShaderConstants;
 import me.jellysquid.mods.sodium.client.render.chunk.terrain.TerrainRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.vertex.format.ChunkVertexType;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 public record ChunkShaderOptions(ChunkFogMode fog, TerrainRenderPass pass, ChunkVertexType vertexType) {
     public ShaderConstants constants() {
         ShaderConstants.Builder constants = ShaderConstants.builder();
@@ -13,7 +16,7 @@ public record ChunkShaderOptions(ChunkFogMode fog, TerrainRenderPass pass, Chunk
             constants.add("USE_FRAGMENT_DISCARD");
         }
 
-        constants.add("USE_VERTEX_COMPRESSION"); // TODO: allow compact vertex format to be disabled
+        constants.add("USE_VERTEX_COMPRESSION");
 
         return constants.build();
     }

@@ -343,26 +343,6 @@ public class QuadViewImpl implements QuadView, ModelQuadView {
     }
 
     @Override
-    public boolean hasColor() {
-        return ModelQuadView.super.hasColor();
-    }
-
-    @Override
-    public int calculateNormal() {
-        return ModelQuadView.super.calculateNormal();
-    }
-
-    @Override
-    public int getAccurateNormal(int i) {
-        return ModelQuadView.super.getAccurateNormal(i);
-    }
-
-    @Override
-    public float[] getVertices() {
-        return new float[0];
-    }
-
-    @Override
     public int getFlags() {
         return geometryFlags();
     }

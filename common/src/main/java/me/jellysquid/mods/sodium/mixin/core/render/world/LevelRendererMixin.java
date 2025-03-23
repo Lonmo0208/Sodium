@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,38 +27,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import org.jetbrains.annotations.Nullable;
 import java.util.SortedSet;
 import java.util.function.Consumer;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin implements LevelRendererExtension {
-    @Shadow
-    @Final
-    private RenderBuffers renderBuffers;
-
-    @Shadow
-    @Final
-    private Long2ObjectMap<SortedSet<BlockDestructionProgress>> destructionProgress;
-
-    @Shadow
-    @Nullable
+    @Shadow @Final private RenderBuffers renderBuffers;
+    @Shadow @Final private Long2ObjectMap<SortedSet<BlockDestructionProgress>> destructionProgress;
+    @Shadow @Nullable
     private ClientLevel level;
+    @Shadow private int ticks;
+    @Shadow @Final private Minecraft minecraft;
+    @Shadow private Frustum cullingFrustum;
 
-    @Shadow
-    private int ticks;
-
-    @Shadow
-    @Final
-    private Minecraft minecraft;
-
-    @Shadow
-    private Frustum cullingFrustum;
-
-    @Unique
-    private SodiumWorldRenderer renderer;
-
-    @Unique
-    private int frame;
+    @Unique private SodiumWorldRenderer renderer;
+    @Unique private int frame;
 
     @Override
     public SodiumWorldRenderer sodium$getWorldRenderer() {
@@ -68,7 +51,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
 
     @Redirect(method = "allChanged()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Options;getEffectiveRenderDistance()I", ordinal = 1))
     private int nullifyBuiltChunkStorage(Options options) {
-        // Do not allow any resources to be allocated
         return 0;
     }
 
@@ -80,14 +62,12 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Inject(method = "setLevel", at = @At("RETURN"))
     private void onWorldChanged(ClientLevel level, CallbackInfo ci) {
         RenderDevice.enterManagedCode();
-
         try {
             this.renderer.setLevel(level);
         } finally {
             RenderDevice.exitManagedCode();
         }
     }
-
     /**
      * @reason Redirect to our renderer
      * @author JellySquid
@@ -96,7 +76,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     public int countRenderedChunks() {
         return this.renderer.getVisibleChunkCount();
     }
-
     /**
      * @reason Redirect the check to our renderer
      * @author JellySquid
@@ -118,28 +97,23 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Overwrite
     private void renderChunkLayer(RenderType renderLayer, PoseStack matrices, double x, double y, double z, Matrix4f projectionMatrix) {
         RenderDevice.enterManagedCode();
-
         try {
             this.renderer.drawChunkLayer(renderLayer, new ChunkRenderMatrices(projectionMatrix, matrices.last().pose()), x, y, z);
         } finally {
             RenderDevice.exitManagedCode();
         }
-
         PlatformLevelAccess.getInstance().runChunkLayerEvents(renderLayer, ((LevelRenderer) (Object) this), matrices, projectionMatrix, this.ticks, this.minecraft.gameRenderer.getMainCamera(), this.cullingFrustum);
     }
 
     /**
-     * @reason Redirect the terrain setup phase to our renderer
+     * @reason Redirect the chunk layer render passes to our renderer
      * @author JellySquid
      */
     @Overwrite
     private void setupRender(Camera camera, Frustum frustum, boolean hasForcedFrustum, boolean spectator) {
-
         var viewport = ((ViewportProvider) frustum).sodium$createViewport();
         var updateChunksImmediately = PlatformInfoAccess.getInstance().isFlawlessFramesActive();
-
         RenderDevice.enterManagedCode();
-
         try {
             this.renderer.setupTerrain(camera, viewport, this.frame++, spectator, updateChunksImmediately);
         } finally {
@@ -182,7 +156,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     private void setSectionDirty(int x, int y, int z, boolean important) {
         this.renderer.scheduleRebuildForChunk(x, y, z, important);
     }
-
     /**
      * @reason Redirect chunk updates to our renderer
      * @author JellySquid
@@ -195,7 +168,6 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
     @Inject(method = "allChanged()V", at = @At("RETURN"))
     private void onReload(CallbackInfo ci) {
         RenderDevice.enterManagedCode();
-
         try {
             this.renderer.reload();
         } finally {
@@ -208,19 +180,17 @@ public abstract class LevelRendererMixin implements LevelRendererExtension {
         this.renderer.renderBlockEntities(matrices, this.renderBuffers, this.destructionProgress, camera, tickDelta);
     }
 
-    // Exclusive to NeoForge, allow to fail.
     @SuppressWarnings("all")
     @Inject(method = "iterateVisibleBlockEntities", at = @At("HEAD"), cancellable = true, require = 0)
     public void replaceBlockEntityIteration(Consumer<BlockEntity> blockEntityConsumer, CallbackInfo ci) {
         ci.cancel();
-
         this.renderer.iterateVisibleBlockEntities(blockEntityConsumer);
     }
 
     /**
-    * @reason Replace the debug string
-    * @author JellySquid
-    */
+     * @reason Replace the debug string
+     * @author JellySquid
+     */
     @Overwrite
     public String getChunkStatistics() {
         return this.renderer.getChunksDebugString();

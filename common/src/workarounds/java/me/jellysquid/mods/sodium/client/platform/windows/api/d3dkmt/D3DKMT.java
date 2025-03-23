@@ -10,10 +10,12 @@ import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.Struct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +27,11 @@ import static org.lwjgl.system.MemoryUtil.memByteBuffer;
 public class D3DKMT {
     private static final Logger LOGGER = LoggerFactory.getLogger("Sodium-D3DKMT");
 
-    private static final boolean SUPPORTS_D3DKMT = VersionHelpers.IsWindowsVistaOrGreater() && Gdi32.isD3DKMTSupported();
-    private static final boolean SUPPORTS_QUERYING_ADAPTER_TYPE = VersionHelpers.IsWindows8OrGreater();
-
     public static List<WDDMAdapterInfo> findGraphicsAdapters() {
-        if (!SUPPORTS_D3DKMT) {
-            LOGGER.warn("Unable to query graphics adapters when the operating system is older than Windows Vista.");
+        if (!Gdi32.isD3DKMTSupported()) {
+            // D3DKMT was introduced with Windows Vista, but it was not possible to enumerate adapters and their
+            // rendering capabilities until Windows 8.0.
+            LOGGER.warn("Unable to query graphics adapters when the operating system is older than Windows 8.0.");
             return List.of();
         }
 
@@ -74,14 +75,10 @@ public class D3DKMT {
     }
 
     private static @Nullable D3DKMT.WDDMAdapterInfo getAdapterInfo(int adapter) {
-        int adapterType = -1;
+        int adapterType = queryAdapterType(adapter);
 
-        if (SUPPORTS_QUERYING_ADAPTER_TYPE) {
-            adapterType = queryAdapterType(adapter);
-
-            if (!isSupportedAdapterType(adapterType)) {
-                return null;
-            }
+        if (!isSupportedAdapterType(adapterType)) {
+            return null;
         }
 
         String adapterName = queryFriendlyName(adapter);
@@ -117,7 +114,7 @@ public class D3DKMT {
     private static @Nullable String queryDriverFileName(int adapter) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             D3DKMTOpenGLInfoStruct info = D3DKMTOpenGLInfoStruct.calloc(stack);
-            d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_UMOPENGLINFO, memByteBuffer(info.address(), info.sizeof()));
+            d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_UMOPENGLINFO, info);
 
             return info.getUserModeDriverFileName();
         }
@@ -142,7 +139,7 @@ public class D3DKMT {
     private static @NotNull String queryFriendlyName(int adapter) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             D3DKMTAdapterRegistryInfoStruct registryInfo = D3DKMTAdapterRegistryInfoStruct.calloc(stack);
-            d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_ADAPTERREGISTRYINFO, memByteBuffer(registryInfo.address(), registryInfo.sizeof()));
+            d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_ADAPTERREGISTRYINFO, registryInfo);
 
             String name = registryInfo.getAdapterString();
 
@@ -157,19 +154,23 @@ public class D3DKMT {
     private static int queryAdapterType(int adapter) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             var info = stack.callocInt(1);
-            d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_ADAPTERTYPE, memByteBuffer(info));
+            d3dkmtQueryAdapterInfo(adapter, KMTQAITYPE_ADAPTERTYPE, memAddress(info), Integer.BYTES);
 
             return info.get(0);
         }
     }
 
-    private static void d3dkmtQueryAdapterInfo(int adapter, int type, ByteBuffer holder) {
+    private static void d3dkmtQueryAdapterInfo(int adapter, int type, Struct struct) {
+        d3dkmtQueryAdapterInfo(adapter, type, struct.address(), struct.sizeof());
+    }
+
+    private static void d3dkmtQueryAdapterInfo(int adapter, int type, long ptr, int len) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             var info = D3DKMTQueryAdapterInfoStruct.malloc(stack);
             info.setAdapterHandle(adapter);
             info.setType(type);
-            info.setDataPointer(memAddress(holder));
-            info.setDataLength(holder.remaining());
+            info.setDataPointer(ptr);
+            info.setDataLength(len);
 
             apiCheckError("D3DKMTQueryAdapterInfo", nd3dKmtQueryAdapterInfo(info.address()));
         }
@@ -192,10 +193,10 @@ public class D3DKMT {
             @NotNull GraphicsAdapterVendor vendor,
             @NotNull String name,
             int adapterType,
-            String openglIcdFilePath,
-            WindowsFileVersion openglIcdVersion
+            @Nullable String openglIcdFilePath,
+            @Nullable WindowsFileVersion openglIcdVersion
     ) implements GraphicsAdapterInfo {
-        public String getOpenGlIcdName() {
+        public @Nullable String getOpenGlIcdName() {
             return D3DKMT.getOpenGlIcdName(this.name);
         }
 
@@ -206,7 +207,18 @@ public class D3DKMT {
         }
     }
 
-    private static String getOpenGlIcdName(String path) {
-        return FilenameUtils.removeExtension(FilenameUtils.getName(path));
+    private static String getOpenGlIcdName(@Nullable String filePath) {
+        if (filePath == null) {
+            return null;
+        }
+
+        var fileName = Paths.get(filePath)
+                .getFileName();
+
+        if (fileName == null) {
+            return null;
+        }
+
+        return fileName.toString();
     }
 }

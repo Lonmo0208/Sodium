@@ -29,11 +29,9 @@ public class ChunkMeshBufferBuilder {
     }
 
     public void push(ChunkVertexEncoder.Vertex[] vertices, Material material) {
-        var vertexCount = vertices.length;
+        int vertexCount = vertices.length;
 
-        if (this.count + vertexCount >= this.capacity) {
-            this.grow(this.stride * vertexCount);
-        }
+        this.ensureCapacity(vertexCount);
 
         this.encoder.write(MemoryUtil.memAddress(this.buffer, this.count * this.stride),
                 material, vertices, this.sectionIndex);
@@ -41,17 +39,20 @@ public class ChunkMeshBufferBuilder {
         this.count += vertexCount;
     }
 
-    private void grow(int len) {
-        // The new capacity will at least as large as the write it needs to service
-        int cap = Math.max(this.capacity * 2, this.capacity + len);
-
-        // Update the buffer and capacity now
-        this.setBufferSize(cap * this.stride);
+    private void ensureCapacity(int required) {
+        if (this.count + required > this.capacity) {
+            this.grow(required);
+        }
     }
 
-    private void setBufferSize(int capacity) {
-        this.buffer = MemoryUtil.memRealloc(this.buffer, capacity * this.stride);
-        this.capacity = capacity;
+    private void grow(int required) {
+        int newCapacity = Math.max(this.capacity * 2, this.capacity + required);
+        this.setBufferSize(newCapacity);
+    }
+
+    private void setBufferSize(int newCapacity) {
+        this.buffer = MemoryUtil.memRealloc(this.buffer, newCapacity * this.stride);
+        this.capacity = newCapacity;
     }
 
     public void start(int sectionIndex) {
