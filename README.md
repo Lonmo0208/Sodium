@@ -1,29 +1,57 @@
-<img src="src/main/resources/assets/sodium/icon.png" width="128">
+<img src="common/src/main/resources/sodium-icon.png" width="128">
 
-# Sodium (for Fabric)
+# Sodium
 
-Sodium is a free and open-source optimization mod for the Minecraft client which improves frame rates and reduces
-micro-stutter  while fixing many graphical issues in Minecraft.
+Sodium is a powerful rendering engine and optimization mod for the Minecraft client which improves frame rates and reduces
+micro-stutter, while fixing many graphical issues in Minecraft.
 
-### 📥 Installation
+**This mod is the result of thousands of hours of development, and is made possible thanks to players like you.** If you
+would like to show a token of your appreciation for my work, and help support the development of Sodium in the process,
+then consider [buying me a coffee](https://caffeinemc.net/donate).
 
-The latest releases of Sodium are published to our official [Modrinth](https://modrinth.com/mod/sodium) and
-[GitHub release](https://github.com/CaffeineMC/sodium-fabric/releases) pages. These releases are considered by our
-team to be suitable for general use, but they are not guaranteed to be free of bugs and other issues.
+<a href="https://caffeinemc.net/donate"><img src="https://storage.ko-fi.com/cdn/kofi2.png?v=3" width="180"/></a>
 
-For more information about downloading and installing the mod, you can read our installation guide on
-[Modrinth](https://modrinth.com/mod/sodium#installation).
-It also contains information about any currently known compatibility issues, which are often useful to read.
+---
 
-### 🐛 Reporting Issues
+### 📥 Downloads
 
-You can report bugs and crashes by opening an issue on our [issue tracker](https://github.com/CaffeineMC/sodium-fabric/issues).
-Before opening a new issue, use the search tool to make sure that your issue has not already been reported and ensure
-that you have completely filled out the issue template. Issues that are duplicates or do not contain the necessary
-information to triage and debug may be closed.
+#### Stable builds
+
+The latest stable release of Sodium can be downloaded from our official [Modrinth](https://modrinth.com/mod/sodium) and
+[CurseForge](https://www.curseforge.com/minecraft/mc-mods/sodium) pages.
+
+#### Nightly builds (for developers)
+
+We also provide bleeding-edge builds ("nightlies") which are useful for testing the very latest changes before they're
+packaged into a release. These builds are only provided for other mod developers and users with expert skills, and do
+not come with any support or warranty. It is often the case they have issues and lack compatibility with other mods.
+
+The latest nightly build for each current branch of development can be downloaded below.
+
+- Minecraft 1.21.4 (latest): [Download nightly](https://nightly.link/CaffeineMC/sodium/workflows/build-commit/dev/sodium-artifacts-dev.zip) or [View all builds](https://github.com/CaffeineMC/sodium/actions/workflows/build-commit.yml?query=branch%3Adev)
+- Minecraft 1.21.3: [Download nightly](https://nightly.link/CaffeineMC/sodium/workflows/build-commit/1.21.3%2Fstable/sodium-artifacts-1.21.3-stable.zip) or [View all builds](https://github.com/CaffeineMC/sodium/actions/workflows/build-commit.yml?query=branch%3A1.21.3%2Fstable)
+- Minecraft 1.21.1: [Download nightly](https://nightly.link/CaffeineMC/sodium/workflows/build-commit/1.21.1%2Fstable/sodium-artifacts-1.21.1-stable.zip) or [View all builds](https://github.com/CaffeineMC/sodium/actions/workflows/build-commit.yml?query=branch%3A1.21.1%2Fstable)
+
+### 🖥️ Installation
+
+Since the release of Sodium 0.6.0, both the _Fabric_ and _NeoForge_ mod loaders are supported. We generally recommend
+that new users prefer to use the _Fabric_ mod loader, since it is more lightweight and stable (for the time being.)
+
+For more information about downloading and installing the mod, please refer to our [Installation Guide](https://github.com/CaffeineMC/sodium/wiki/Installation).
+
+### 🙇 Getting Help
+
+For technical support (including help with mod installation problems and game crashes), please use our
+[official Discord server](https://caffeinemc.net/discord).
+
+### 📬 Reporting Issues
+
+If you do not need technical support and would like to report an issue (bug, crash, etc.) or otherwise request changes
+(for mod compatibility, new features, etc.), then we encourage you to open an issue on the
+[project issue tracker](https://github.com/CaffeineMC/sodium/issues).
 
 Please note that while the issue tracker is open to feature requests, development is primarily focused on
-improving hardware compatibility, performance, and finishing any unimplemented features necessary for parity with
+improving compatibility, performance, and finishing any unimplemented features necessary for parity with
 the vanilla renderer.
 
 ### 💬 Join the Community
@@ -36,15 +64,16 @@ We have an [official Discord community](https://caffeinemc.net/discord) for all 
 
 ## ✅ Hardware Compatibility
 
-We only provide support for graphics cards which have up-to-date drivers for OpenGL 4.6. Most graphics cards which have
-been released since year 2010 are supported, such as the...
+We only provide official support for graphics cards which have up-to-date drivers that are compatible with OpenGL 4.5
+or newer. Most graphics cards released in the past 12 years will meet these requirements, including the following:
 
 - AMD Radeon HD 7000 Series (GCN 1) or newer
 - NVIDIA GeForce 400 Series (Fermi) or newer
 - Intel HD Graphics 500 Series (Skylake) or newer
 
-In some cases, older graphics cards may also work (so long as they have up-to-date drivers which have support for
-OpenGL 3.3), but they are not officially supported, and may not be compatible with future versions of Sodium.
+Nearly all graphics cards that are already compatible with Minecraft (which requires OpenGL 3.3) should also work
+with Sodium. But our team cannot ensure compatibility or provide support for older graphics cards, and they may
+not work with future versions of Sodium.
 
 #### OpenGL Compatibility Layers
 
@@ -52,34 +81,25 @@ Devices which need to use OpenGL translation layers (such as GL4ES, ANGLE, etc) 
 not work with Sodium. These translation layers do not implement required functionality and they suffer from underlying
 driver bugs which cannot be worked around.
 
-## 🛠️ Developer Guide
+## 🛠️ Building from sources
 
-### Building from sources
+Sodium uses the [Gradle build tool](https://gradle.org/) and can be built with the `gradle build` command. The build
+artifacts (production binaries and their source bundles) can be found in the `build/mods` directory.
 
-Sodium uses a typical Gradle project structure and can be compiled by simply running the default `build` task. The build
-artifacts (typical mod binaries, and their sources) can be found in the `build/libs` directory.
+The [Gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:using_wrapper) is provided for ease of use and will automatically download and install the
+appropriate version of Gradle for the project build. To use the Gradle wrapper, substitute `gradle` in build commands
+with `./gradlew.bat` (Windows) or `./gradlew` (macOS and Linux).
 
-#### Requirements
+### Build Requirements
 
-We recommend using a package manager (such as [SDKMAN](https://sdkman.io/)) to manage toolchain dependencies and keep
-them up to date. For many Linux distributions, these dependencies will be standard packages in your software
-repositories.
-
-- OpenJDK 17
-    - We recommend using the [Eclipse Temurin](https://adoptium.net/) distribution, as it's known to be high quality 
-      and to work without issues.
-- Gradle 8.2.1 (optional)
-    - The [Gradle wrapper](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:using_wrapper) is provided
-      in this repository can be used instead of installing a suitable version of Gradle yourself. However, if you are
-      building many projects, you may prefer to install it yourself through a suitable package manager as to save disk
-      space and to avoid many different Gradle daemons sitting around in memory.
+- OpenJDK 21
+    - We recommend using the [Eclipse Temurin](https://adoptium.net/) distribution as it's regularly tested by our developers and known
+      to be of high quality.
+- Gradle 8.10.x
     - Typically, newer versions of Gradle will work without issues, but the build script is only tested against the
-      version specified by the wrapper script.
+      version used by the [wrapper script](/gradle/wrapper/gradle-wrapper.properties).
 
 ## 📜 License
 
-Except where otherwise stated, the files in this repository are provided under the terms of the GNU LGPLv3, a free and
-open-source license. For more information, please see the [license file](COPYING.LESSER).
-
-When submitting pull requests to this repository, it is assumed that you are licensing your contribution under the
-GNU LGPLv3, unless you state otherwise.
+Except where otherwise stated (see [third-party license notices](thirdparty/NOTICE.txt)), the content of this repository is provided
+under the [Polyform Shield 1.0.0](LICENSE.md) license by [JellySquid](https://jellysquid.me).
