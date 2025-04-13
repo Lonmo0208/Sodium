@@ -77,6 +77,7 @@ loom {
             appendProjectPathToConfigName = false
             ideConfigGenerated(true)
             runDir("run")
+            vmArgs("-Dfabric.gameVersion=25w14craftmine")
         }
     }
 }
