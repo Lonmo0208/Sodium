@@ -35,7 +35,8 @@
     "TwistedZero",
     "Leo40Git",
     "haykam821",
-    "muzikbike"
+    "muzikbike",
+    "Mikarific"
   ],
   "contact" : {
     "homepage" : "https://github.com/CaffeineMC/sodium",
@@ -71,7 +72,12 @@
     "sodium-fabric.mixins.json"
   ],
   "depends" : {
-    "fabricloader" : ">=0.16.0"
+    "fabricloader" : ">=0.16.0",
+    "fabric-block-view-api-v2" : "*",
+    "fabric-renderer-api-v1" : "*",
+    "fabric-rendering-data-attachment-v1" : "*",
+    "fabric-rendering-fluids-v1" : ">=2.0.0",
+    "fabric-resource-loader-v0" : "*"
   },
   "breaks" : {
     "embeddium": "*",
@@ -96,7 +102,8 @@
     "sodium-extra" : "<0.6.0",
     "sspb" : "<4.0.0",
     "moreculling": "<1.2.4",
-    "simply-no-shading": "<7.6.2"
+    "simply-no-shading": "<7.6.2",
+    "betterend": "<=21.0.11"
   },
   "provides" : [
     "indium"

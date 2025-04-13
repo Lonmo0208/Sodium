@@ -6,9 +6,6 @@ import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.dimension.DimensionType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 @Mixin(ClientLevel.class)
 public class ClientLevelMixin implements BiomeSeedProvider {
@@ -24,16 +20,7 @@ public class ClientLevelMixin implements BiomeSeedProvider {
     private long biomeZoomSeed;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    private void captureSeed(ClientPacketListener packetListener,
-                             ClientLevel.ClientLevelData levelData,
-                             ResourceKey<Level> dimension,
-                             Holder<DimensionType> dimensionType,
-                             int loadDistance,
-                             int simulationDistance,
-                             LevelRenderer renderer,
-                             boolean isDebug,
-                             long biomeZoomSeed, int k, List list, List list2,
-                             CallbackInfo ci) {
+    private void captureSeed(ClientPacketListener clientPacketListener, ClientLevel.ClientLevelData clientLevelData, ResourceKey resourceKey, Holder holder, int i, int j, LevelRenderer levelRenderer, boolean bl, long l, int k, List list, List list2, CallbackInfo ci) {
         this.biomeZoomSeed = biomeZoomSeed;
     }
 

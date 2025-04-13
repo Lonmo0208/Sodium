@@ -4,13 +4,13 @@ object BuildConfig {
     val MINECRAFT_VERSION: String = "25w14craftmine"
     val NEOFORGE_VERSION: String = "21.5.0-beta"
     val FABRIC_LOADER_VERSION: String = "0.16.13"
-    val FABRIC_API_VERSION: String = "0.119.8+25w14craftmine"
+    val FABRIC_API_VERSION: String = "0.119.9+25w14craftmine"
 
     // This value can be set to null to disable Parchment.
     val PARCHMENT_VERSION: String? = null
 
     // https://semver.org/
-    var MOD_VERSION: String = "0.6.12"
+    var MOD_VERSION: String = "0.6.13"
 
     fun createVersionString(project: Project): String {
         val builder = StringBuilder()

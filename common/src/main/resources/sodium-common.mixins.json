@@ -92,6 +92,9 @@
     "features.textures.scan.TextureAtlasSpriteMixin",
     "workarounds.context_creation.WindowMixin",
     "workarounds.context_creation.RenderSystemMixin",
-    "workarounds.event_loop.RenderSystemMixin"
+    "workarounds.event_loop.RenderSystemMixin",
+    "workarounds.loading_race.ClientPacketListenerMixin",
+    "workarounds.loading_race.PlayerAccessor",
+    "workarounds.loading_race.PlayerMixin"
   ]
 }

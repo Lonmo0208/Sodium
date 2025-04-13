@@ -8,6 +8,5 @@ public class DefaultTerrainRenderPasses {
     public static final TerrainRenderPass TRANSLUCENT = new TerrainRenderPass(RenderType.translucent(), true, false);
     public static final TerrainRenderPass SKY_BLOCK = new TerrainRenderPass(RenderType.skyBlock(), false, false);
 
-
     public static final TerrainRenderPass[] ALL = new TerrainRenderPass[] { SOLID, CUTOUT, TRANSLUCENT, SKY_BLOCK };
 }

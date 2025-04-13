@@ -77,7 +77,6 @@ loom {
             appendProjectPathToConfigName = false
             ideConfigGenerated(true)
             runDir("run")
-            vmArgs("-Dfabric.gameVersion=1.21.5")
         }
     }
 }
