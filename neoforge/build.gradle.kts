@@ -9,6 +9,9 @@ base {
 }
 
 repositories {
+    flatDir {
+        dir(rootDir.resolve("libs"))
+    }
     maven("https://maven.pkg.github.com/ims212/FRAPI-Testing") {
         credentials {
             username = "IMS212"
@@ -17,7 +20,7 @@ repositories {
         }
     }
 
-    maven("https://maven.su5ed.dev/releases")
+    //maven("https://maven.su5ed.dev/releases")
     maven("https://maven.neoforged.net/releases/")
 }
 
@@ -48,16 +51,16 @@ dependencies {
     configurationCommonModResources(project(path = ":common", configuration = "commonApiResources"))
     configurationCommonServiceResources(project(path = ":common", configuration = "commonEarlyLaunchResources"))
 
-    fun addEmbeddedFabricModule(dependency: String) {
+    fun addEmbeddedFabricModule(dependency: Any) {
         dependencies.implementation(dependency)
         dependencies.jarJar(dependency)
     }
 
-    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
+    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42-25w14c")
     implementation("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
     jarJar("net.caffeinemc:fabric-renderer-api-v1:6.0.0")
-    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
-    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
+    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48-25w14c")
+    addEmbeddedFabricModule("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10-25w14c")
 
     jarJar(project(":neoforge", "service"))
 }

@@ -58,7 +58,7 @@ public class LevelRendererMixin {
 
     @Group(name = "sodium$cloudsOverride", min = 1, max = 1)
     @Dynamic
-    @Inject(method = { "lambda$addCloudsPass$6" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/CloudRenderer;render(ILnet/minecraft/client/CloudStatus;FLnet/minecraft/world/phys/Vec3;F)V"), cancellable = true, require = 0) // Inject after Forge checks dimension support
+    @Inject(method = { "lambda$addCloudsPass$6" }, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/CloudRenderer;render(FLnet/minecraft/world/phys/Vec3;Lorg/joml/Matrix4f;Lorg/joml/Matrix4f;ILnet/minecraft/client/CloudStatus;F)V"), cancellable = true, require = 0) // Inject after Forge checks dimension support
     public void renderCloudsNeo(float f, Vec3 vec3, Matrix4f modelView, Matrix4f proj, int i, CloudStatus status, float g, CallbackInfo ci) {
         ci.cancel();
 
