@@ -36,7 +36,13 @@ public class SpriteFinderCache {
         @Override
         public void onResourceManagerReload(ResourceManager manager) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            blockAtlasSpriteFinder = SpriteFinder.get(modelManager.getAtlas(TextureAtlas.LOCATION_BLOCKS));
+            // 添加空值检查防止崩溃
+            if (modelManager != null) {
+                TextureAtlas atlas = modelManager.getAtlas(TextureAtlas.LOCATION_BLOCKS);
+                if (atlas != null) {
+                    blockAtlasSpriteFinder = SpriteFinder.get(atlas);
+                }
+            }
         }
 
         @Override
