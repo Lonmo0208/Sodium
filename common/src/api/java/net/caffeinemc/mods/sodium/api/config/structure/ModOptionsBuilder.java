@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Function;
 
@@ -39,14 +39,8 @@ public interface ModOptionsBuilder {
      * @return The current builder instance.
      */
     ModOptionsBuilder setColorTheme(ColorThemeBuilder colorTheme);
-
-    /**
-     * Sets the icon texture for the mod. The icon should be centered within the square texture and the background should be transparent. The icon will be rendered monochrome tinted in the mod's theme color.
-     *
-     * @param texture The resource location of the icon texture.
-     * @return The current builder instance.
-     */
-    ModOptionsBuilder setIcon(ResourceLocation texture);
+    
+    ModOptionsBuilder setIcon(Identifier texture);
 
     /**
      * Adds a configuration page to the mod options.

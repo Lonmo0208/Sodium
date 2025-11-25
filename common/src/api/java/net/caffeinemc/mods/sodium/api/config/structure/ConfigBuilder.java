@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.api.config.structure;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /**
  * Root builder interface for defining configuration structures. An implementation of this class is passed to your entry point and lets you create builders for everything in the API. Builders do not need to be built manually, as they are automatically closed when the enclosing scope ends.
@@ -68,37 +68,11 @@ public interface ConfigBuilder {
      */
     OptionGroupBuilder createOptionGroup();
 
-    /**
-     * Creates a new boolean option builder.
-     *
-     * @param id The unique identifier for this option.
-     * @return A builder for defining a boolean option.
-     */
-    BooleanOptionBuilder createBooleanOption(ResourceLocation id);
+    BooleanOptionBuilder createBooleanOption(Identifier id);
 
-    /**
-     * Creates a new integer option builder.
-     *
-     * @param id The unique identifier for this option.
-     * @return A builder for defining an integer option.
-     */
-    IntegerOptionBuilder createIntegerOption(ResourceLocation id);
+    IntegerOptionBuilder createIntegerOption(Identifier id);
 
-    /**
-     * Creates a new enum option builder.
-     *
-     * @param id        The unique identifier for this option.
-     * @param enumClass The enum class for this option.
-     * @param <E>       The enum type.
-     * @return A builder for defining an enum option.
-     */
-    <E extends Enum<E>> EnumOptionBuilder<E> createEnumOption(ResourceLocation id, Class<E> enumClass);
+    <E extends Enum<E>> EnumOptionBuilder<E> createEnumOption(Identifier id, Class<E> enumClass);
 
-    /**
-     * Creates a new external button option builder.
-     *
-     * @param id The unique identifier for this option.
-     * @return A builder for defining an external button option.
-     */
-    ExternalButtonOptionBuilder createExternalButtonOption(ResourceLocation id);
+    ExternalButtonOptionBuilder createExternalButtonOption(Identifier id);
 }

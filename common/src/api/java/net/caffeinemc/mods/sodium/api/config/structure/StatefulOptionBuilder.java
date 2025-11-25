@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -58,14 +58,7 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      */
     StatefulOptionBuilder<V> setDefaultValue(V value);
 
-    /**
-     * Sets a provider function to determine the default value for this option based on the current configuration state.
-     *
-     * @param provider     The function that provides the default value.
-     * @param dependencies The options that this provider depends on.
-     * @return The current builder instance.
-     */
-    StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, ResourceLocation... dependencies);
+    StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, Identifier... dependencies);
 
     /**
      * Sets a binding for this option using save and load functions.
