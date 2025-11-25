@@ -108,7 +108,7 @@ package com.example.examplemod;
 import net.caffeinemc.mods.sodium.api.config.ConfigEntryPoint;
 import net.caffeinemc.mods.sodium.api.config.structure.ConfigBuilder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public class ExampleConfigUser implements ConfigEntryPoint {
     private final OptionStorage storage = new OptionStorage();
@@ -117,12 +117,12 @@ public class ExampleConfigUser implements ConfigEntryPoint {
     @Override
     public void registerConfigLate(ConfigBuilder builder) {
         builder.registerOwnModOptions()
-                .setIcon(ResourceLocation.parse("examplemod:textures/gui/icon.png"))
+                .setIcon(Identifier.parse("examplemod:textures/gui/icon.png"))
                 .addPage(builder.createOptionPage()
                         .setName(Component.literal("Example Page"))
                         .addOptionGroup(builder.createOptionGroup()
                                 .setName(Component.literal("Example Group")) // only if necessary for clarity
-                                .addOption(builder.createBooleanOption(ResourceLocation.parse("examplemod:example_option"))
+                                .addOption(builder.createBooleanOption(Identifier.parse("examplemod:example_option"))
                                         .setName(Component.literal("Example Option")) // use translation keys here
                                         .setTooltip(Component.literal("Example tooltip"))
                                         .setStorageHandler(this.handler)

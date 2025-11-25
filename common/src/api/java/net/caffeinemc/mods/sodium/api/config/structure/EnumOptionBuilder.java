@@ -6,7 +6,7 @@ import net.caffeinemc.mods.sodium.api.config.option.OptionBinding;
 import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Set;
 import java.util.function.Consumer;
@@ -38,14 +38,7 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
      */
     EnumOptionBuilder<E> setAllowedValues(Set<E> allowedValues);
 
-    /**
-     * Sets a provider function to determine the allowed values for this enum option based on the current configuration state.
-     *
-     * @param provider     The function that provides the set of allowed enum values.
-     * @param dependencies The options that this provider depends on.
-     * @return This builder instance.
-     */
-    EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, ResourceLocation... dependencies);
+    EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, Identifier... dependencies);
 
     /**
      * Sets a provider function to determine the display name for each enum constant.
@@ -77,13 +70,13 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
     EnumOptionBuilder<E> setDefaultValue(E value);
 
     @Override
-    EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, ResourceLocation... dependencies);
+    EnumOptionBuilder<E> setDefaultProvider(Function<ConfigState, E> provider, Identifier... dependencies);
 
     @Override
     EnumOptionBuilder<E> setEnabled(boolean available);
 
     @Override
-    EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+    EnumOptionBuilder<E> setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 
     @Override
     EnumOptionBuilder<E> setBinding(Consumer<E> save, Supplier<E> load);

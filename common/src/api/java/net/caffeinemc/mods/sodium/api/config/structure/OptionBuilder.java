@@ -2,7 +2,7 @@ package net.caffeinemc.mods.sodium.api.config.structure;
 
 import net.caffeinemc.mods.sodium.api.config.ConfigState;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.function.Function;
 
@@ -34,12 +34,5 @@ public interface OptionBuilder {
      */
     OptionBuilder setEnabled(boolean available);
 
-    /**
-     * Sets a provider function to determine whether the option is enabled based on the current configuration state.
-     *
-     * @param provider     The function that provides the enabled state.
-     * @param dependencies The options that this provider depends on.
-     * @return The current builder instance.
-     */
-    OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, ResourceLocation... dependencies);
+    OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 }
