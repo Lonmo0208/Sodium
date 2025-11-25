@@ -17,7 +17,7 @@ public interface ConfigState {
      * @param id The ID of the option.
      * @return The current value of the boolean option.
      */
-    boolean readBooleanOption(ResourceLocation id);
+    boolean readBooleanOption(Identifier id);
 
     /**
      * Reads an integer option from the configuration state.
@@ -25,7 +25,7 @@ public interface ConfigState {
      * @param id The ID of the option.
      * @return The current value of the integer option.
      */
-    int readIntOption(ResourceLocation id);
+    int readIntOption(Identifier id);
 
     /**
      * Reads an enum option from the configuration state.
@@ -35,5 +35,5 @@ public interface ConfigState {
      * @param <E>       The enum type.
      * @return The current value of the enum option.
      */
-    <E extends Enum<E>> E readEnumOption(ResourceLocation id, Class<E> enumClass);
+    <E extends Enum<E>> E readEnumOption(Identifier id, Class<E> enumClass);
 }
