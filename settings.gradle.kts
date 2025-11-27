@@ -12,4 +12,3 @@ pluginManagement {
 include("common")
 //include("frapi")
 include("fabric")
-include("neoforge")
