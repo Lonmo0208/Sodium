@@ -32,6 +32,13 @@ public interface IntegerOptionBuilder extends StatefulOptionBuilder<Integer> {
      */
     IntegerOptionBuilder setRange(Range range);
 
+    /**
+     * Sets a provider function to determine the range for this integer option based on the current configuration state.
+     *
+     * @param provider     The function that provides the range.
+     * @param dependencies The options that this provider depends on.
+     * @return The current builder instance.
+     */
     IntegerOptionBuilder setRangeProvider(Function<ConfigState, Range> provider, Identifier... dependencies);
 
     /**

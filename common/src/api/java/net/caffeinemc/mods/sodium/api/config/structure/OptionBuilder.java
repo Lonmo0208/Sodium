@@ -34,5 +34,12 @@ public interface OptionBuilder {
      */
     OptionBuilder setEnabled(boolean available);
 
+    /**
+     * Sets a provider function to determine whether the option is enabled based on the current configuration state.
+     *
+     * @param provider     The function that provides the enabled state.
+     * @param dependencies The options that this provider depends on.
+     * @return The current builder instance.
+     */
     OptionBuilder setEnabledProvider(Function<ConfigState, Boolean> provider, Identifier... dependencies);
 }

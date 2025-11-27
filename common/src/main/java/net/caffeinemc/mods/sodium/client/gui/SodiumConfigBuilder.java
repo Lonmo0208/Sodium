@@ -90,7 +90,7 @@ public class SodiumConfigBuilder implements ConfigEntryPoint {
         @Override
         public TextureContents loadContents(ResourceManager resourceManager) throws IOException {
             try (InputStream inputStream = SodiumConfigBuilder.class.getResourceAsStream("/config-icon.png")) {
-                return new TextureContents(NativeImage.read(inputStream), new TextureMetadataSection(false, false, MipmapStrategy.AUTO, 0.0F));
+                return new TextureContents(NativeImage.read(inputStream), new TextureMetadataSection(false, false, MipmapStrategy.AUTO, 0.1f));
             }
         }
     }

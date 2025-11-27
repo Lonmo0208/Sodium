@@ -38,6 +38,13 @@ public interface EnumOptionBuilder<E extends Enum<E>> extends StatefulOptionBuil
      */
     EnumOptionBuilder<E> setAllowedValues(Set<E> allowedValues);
 
+    /**
+     * Sets a provider function to determine the allowed values for this enum option based on the current configuration state.
+     *
+     * @param provider     The function that provides the set of allowed enum values.
+     * @param dependencies The options that this provider depends on.
+     * @return This builder instance.
+     */
     EnumOptionBuilder<E> setAllowedValuesProvider(Function<ConfigState, Set<E>> provider, Identifier... dependencies);
 
     /**

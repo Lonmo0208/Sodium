@@ -58,6 +58,13 @@ public interface StatefulOptionBuilder<V> extends OptionBuilder {
      */
     StatefulOptionBuilder<V> setDefaultValue(V value);
 
+    /**
+     * Sets a provider function to determine the default value for this option based on the current configuration state.
+     *
+     * @param provider     The function that provides the default value.
+     * @param dependencies The options that this provider depends on.
+     * @return The current builder instance.
+     */
     StatefulOptionBuilder<V> setDefaultProvider(Function<ConfigState, V> provider, Identifier... dependencies);
 
     /**

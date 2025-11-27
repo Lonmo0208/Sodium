@@ -6,6 +6,12 @@ import net.minecraft.resources.Identifier;
  * Builder interface for defining option overrides, which replace an existing option with a new one.
  */
 public interface OptionOverrideBuilder {
+    /**
+     * Sets the target option to be overridden.
+     *
+     * @param target The ID of the target option.
+     * @return The current builder instance.
+     */
     OptionOverrideBuilder setTarget(Identifier target);
 
     /**
