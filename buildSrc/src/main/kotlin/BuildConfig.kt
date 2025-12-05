@@ -1,7 +1,7 @@
  import org.gradle.api.Project
 
 object BuildConfig {
-    val MINECRAFT_VERSION: String = "1.21.11-pre5"
+    val MINECRAFT_VERSION: String = "1.21.11-rc2"
     val NEOFORGE_VERSION: String = "21.11.0-alpha.1.21.11-pre3.20251201.145838"
     val FABRIC_LOADER_VERSION: String = "0.18.1"
     val FABRIC_API_VERSION: String = "0.139.4+1.21.11"
@@ -11,7 +11,7 @@ object BuildConfig {
     val PARCHMENT_VERSION: String? = null
 
     // https://semver.org/
-    var MOD_VERSION: String = "0.8.0-beta.1"
+    var MOD_VERSION: String = "0.8.0-beta.2"
 
     fun createVersionString(project: Project): String {
         val builder = StringBuilder()
