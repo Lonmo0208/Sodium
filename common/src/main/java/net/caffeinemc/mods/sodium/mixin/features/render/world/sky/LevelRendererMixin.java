@@ -1,32 +1,19 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.world.sky;
 
-import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
-
     @Shadow
     protected abstract boolean doesMobEffectBlockSky(Camera camera);
-
-    @WrapOperation(method = "addSkyPass", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;doesMobEffectBlockSky(Lnet/minecraft/client/Camera;)Z"),
-            require = 0)
-    private boolean preRenderSkyFabric(LevelRenderer instance, Camera camera, Operation<Boolean> original) {
-        return preRenderSkyCommon(instance, camera, original);
-    }
-
-    @WrapOperation(method = "addSkyPass(Lnet/minecraft/client/renderer/FrameGraphBuilder;Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GpuBufferSlice;Lorg/joml/Matrix4f;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;doesMobEffectBlockSky(Lnet/minecraft/client/Camera;)Z"),
-            require = 0
-    )
-    private boolean preRenderSkyNeoForge(LevelRenderer instance, Camera camera, Operation<Boolean> original) {
-        return preRenderSkyCommon(instance, camera, original);
-    }
 
     /**
      * <p>Prevents the sky layer from rendering when the fog distance is reduced
@@ -56,7 +43,6 @@ public abstract class LevelRendererMixin {
         if (Minecraft.getInstance().gameRenderer.getMainCamera().getFluidInCamera() != FogType.NONE) {
             return true;
         }
-
         return original.call(camera);
     }
 }
