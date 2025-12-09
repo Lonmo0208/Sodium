@@ -11,8 +11,22 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(LevelRenderer.class)
 public abstract class LevelRendererMixin {
+
     @Shadow
     protected abstract boolean doesMobEffectBlockSky(Camera camera);
+
+    @WrapOperation(method = "addSkyPass", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;doesMobEffectBlockSky(Lnet/minecraft/client/Camera;)Z"),
+            require = 0)
+    private boolean preRenderSkyFabric(LevelRenderer instance, Camera camera, Operation<Boolean> original) {
+        return preRenderSkyCommon(instance, camera, original);
+    }
+
+    @WrapOperation(method = "addSkyPass(Lnet/minecraft/client/renderer/FrameGraphBuilder;Lnet/minecraft/client/Camera;Lnet/minecraft/client/renderer/GpuBufferSlice;Lorg/joml/Matrix4f;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/LevelRenderer;doesMobEffectBlockSky(Lnet/minecraft/client/Camera;)Z"),
+            require = 0
+    )
+    private boolean preRenderSkyNeoForge(LevelRenderer instance, Camera camera, Operation<Boolean> original) {
+        return preRenderSkyCommon(instance, camera, original);
+    }
 
     /**
      * <p>Prevents the sky layer from rendering when the fog distance is reduced

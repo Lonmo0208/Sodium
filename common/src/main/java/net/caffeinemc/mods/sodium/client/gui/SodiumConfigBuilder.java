@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 // TODO: get initialValue from the vanilla options (it's private)
 public class SodiumConfigBuilder implements ConfigEntryPoint {
