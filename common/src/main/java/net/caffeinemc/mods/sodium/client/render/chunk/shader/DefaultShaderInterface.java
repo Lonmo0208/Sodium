@@ -18,8 +18,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.TextureFilteringMethod;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import org.joml.Matrix4fc;
-import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL33C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -104,11 +103,11 @@ public class DefaultShaderInterface implements ChunkShaderInterface {
     @Deprecated(forRemoval = true) // should be handled properly in GFX instead.
     private void bindTexture(ChunkShaderTextureSlot slot, GpuTextureView textureView, GpuSampler sampler) {
         GlTexture tex = (GlTexture) textureView.texture();
-        GlStateManager._activeTexture(GL32C.GL_TEXTURE0 + slot.ordinal());
+        GlStateManager._activeTexture(GL46C.GL_TEXTURE0 + slot.ordinal());
         GlStateManager._bindTexture(tex.glId());
-        GlStateManager._texParameter(GL32C.GL_TEXTURE_2D, 33084, textureView.baseMipLevel());
-        GlStateManager._texParameter(GL32C.GL_TEXTURE_2D, 33085, textureView.baseMipLevel() + textureView.mipLevels() - 1);
-        GL33C.glBindSampler(slot.ordinal(), ((GlSampler) sampler).getId());
+        GlStateManager._texParameter(GL46C.GL_TEXTURE_2D, 33084, textureView.baseMipLevel());
+        GlStateManager._texParameter(GL46C.GL_TEXTURE_2D, 33085, textureView.baseMipLevel() + textureView.mipLevels() - 1);
+        GL46C.glBindSampler(slot.ordinal(), ((GlSampler) sampler).getId());
 
         var uniform = this.uniformTextures.get(slot);
         uniform.setInt(slot.ordinal());

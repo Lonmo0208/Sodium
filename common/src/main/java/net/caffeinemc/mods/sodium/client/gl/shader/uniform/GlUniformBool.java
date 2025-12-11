@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gl.shader.uniform;
 
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 
 public class GlUniformBool extends GlUniform<Boolean> {
     public GlUniformBool(int index) {
@@ -13,6 +13,6 @@ public class GlUniformBool extends GlUniform<Boolean> {
     }
 
     public void setBool(boolean value) {
-        GL30C.glUniform1i(this.index, value ? 1 : 0);
+        GL46C.glUniform1i(this.index, value ? 1 : 0);
     }
 }

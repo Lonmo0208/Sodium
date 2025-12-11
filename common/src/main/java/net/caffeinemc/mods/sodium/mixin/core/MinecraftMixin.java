@@ -12,7 +12,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
-import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL46C;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -59,8 +59,8 @@ public class MinecraftMixin {
             // Because we are also waiting on the client for the FenceSync to finish, the flush is effectively treated
             // like a Finish command, where we know that once ClientWaitSync returns, it's likely that everything
             // before it has been completed by the GPU.
-            GL32C.glClientWaitSync(fence, GL32C.GL_SYNC_FLUSH_COMMANDS_BIT, Long.MAX_VALUE);
-            GL32C.glDeleteSync(fence);
+            GL46C.glClientWaitSync(fence, GL46C.GL_SYNC_FLUSH_COMMANDS_BIT, Long.MAX_VALUE);
+            GL46C.glDeleteSync(fence);
         }
 
         profiler.pop();
@@ -68,7 +68,7 @@ public class MinecraftMixin {
 
     @Inject(method = "runTick", at = @At("RETURN"))
     private void postRender(boolean tick, CallbackInfo ci) {
-        var fence = GL32C.glFenceSync(GL32C.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        var fence = GL46C.glFenceSync(GL46C.GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
         if (fence == 0) {
             throw new RuntimeException("Failed to create fence object");

@@ -1,18 +1,17 @@
 package net.caffeinemc.mods.sodium.client.gl.shader;
 
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL32C;
-import org.lwjgl.opengl.GL40C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 
 /**
  * An enumeration over the supported OpenGL shader types.
  */
 public enum ShaderType {
-    VERTEX(GL20C.GL_VERTEX_SHADER),
-    GEOMETRY(GL32C.GL_GEOMETRY_SHADER),
-    TESS_CONTROL(GL40C.GL_TESS_CONTROL_SHADER),
-    TESS_EVALUATION(GL40C.GL_TESS_EVALUATION_SHADER),
-    FRAGMENT(GL20C.GL_FRAGMENT_SHADER);
+    VERTEX(GL46C.GL_VERTEX_SHADER),
+    GEOMETRY(GL46C.GL_GEOMETRY_SHADER),
+    TESS_CONTROL(GL46C.GL_TESS_CONTROL_SHADER),
+    TESS_EVALUATION(GL46C.GL_TESS_EVALUATION_SHADER),
+    FRAGMENT(GL46C.GL_FRAGMENT_SHADER);
 
     public final int id;
 

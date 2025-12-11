@@ -1,6 +1,6 @@
 package net.caffeinemc.mods.sodium.client.gl.shader.uniform;
 
-import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL46C;
 
 public class GlUniformFloat4v extends GlUniform<float[]> {
     public GlUniformFloat4v(int index) {
@@ -13,10 +13,10 @@ public class GlUniformFloat4v extends GlUniform<float[]> {
             throw new IllegalArgumentException("value.length != 4");
         }
 
-        GL30C.glUniform4fv(this.index, value);
+        GL46C.glUniform4fv(this.index, value);
     }
 
     public void set(float x, float y, float z, float w) {
-        GL30C.glUniform4f(this.index, x, y, z, w);
+        GL46C.glUniform4f(this.index, x, y, z, w);
     }
 }

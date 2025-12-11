@@ -5,7 +5,7 @@ import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryUtil;
 
 public class GlBufferStreamer {
@@ -54,7 +54,7 @@ public class GlBufferStreamer {
             requiresFlush = false;
             if (this.mapping != null) {
                 commandList.flushMappedRange(mapping, 0, (int) bufferSize);
-                GL44C.glMemoryBarrier(GL44C.GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT); // TODO: I don't know yet if this is required.
+                GL46C.glMemoryBarrier(GL46C.GL_CLIENT_MAPPED_BUFFER_BARRIER_BIT); // TODO: I don't know yet if this is required.
             } else {
                 commandList.uploadDataToOffset((GlMutableBuffer) buffer, 0, writeAddress, (int) bufferSize);
             }

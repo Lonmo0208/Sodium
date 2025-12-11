@@ -5,7 +5,7 @@ import net.caffeinemc.mods.sodium.client.gl.buffer.GlBufferTarget;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
 import org.lwjgl.opengl.ARBBufferStorage;
-import org.lwjgl.opengl.GL44C;
+import org.lwjgl.opengl.GL46C;
 import org.lwjgl.opengl.GLCapabilities;
 
 public enum BufferStorageFunctions {
@@ -18,7 +18,7 @@ public enum BufferStorageFunctions {
     CORE {
         @Override
         public void createBufferStorage(GlBufferTarget target, long length, EnumBitField<GlBufferStorageFlags> flags) {
-            GL44C.glBufferStorage(target.getTargetParameter(), length, flags.getBitField());
+            GL46C.glBufferStorage(target.getTargetParameter(), length, flags.getBitField());
         }
     },
     ARB {
@@ -31,7 +31,7 @@ public enum BufferStorageFunctions {
     public static BufferStorageFunctions pickBest(RenderDevice device) {
         GLCapabilities capabilities = device.getCapabilities();
 
-        if (capabilities.OpenGL44) {
+        if (capabilities.OpenGL46) {
             return CORE;
         } else if (capabilities.GL_ARB_buffer_storage) {
             return ARB;

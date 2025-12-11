@@ -9,9 +9,8 @@ import net.minecraft.resources.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.NonNull;
-import org.lwjgl.opengl.GL20C;
-import org.lwjgl.opengl.GL30C;
-import org.lwjgl.opengl.GL32C;
+import org.lwjgl.opengl.GL46C;
+import org.lwjgl.opengl.GL46C;
 
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -38,22 +37,22 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
     }
 
     public void bind() {
-        GL20C.glUseProgram(this.handle());
+        GL46C.glUseProgram(this.handle());
     }
 
     public void unbind() {
-        GL20C.glUseProgram(0);
+        GL46C.glUseProgram(0);
     }
 
     public void delete() {
-        GL20C.glDeleteProgram(this.handle());
+        GL46C.glDeleteProgram(this.handle());
 
         this.invalidateHandle();
     }
 
     @Override
     public <U extends GlUniform<?>> @NonNull U bindUniform(String name, IntFunction<U> factory) {
-        int index = GL20C.glGetUniformLocation(this.handle(), name);
+        int index = GL46C.glGetUniformLocation(this.handle(), name);
 
         if (index < 0) {
             throw new NullPointerException("No uniform exists with name: " + name);
@@ -64,7 +63,7 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
 
     @Override
     public <U extends GlUniform<?>> U bindUniformOptional(String name, IntFunction<U> factory) {
-        int index = GL20C.glGetUniformLocation(this.handle(), name);
+        int index = GL46C.glGetUniformLocation(this.handle(), name);
 
         if (index < 0) {
             return null;
@@ -75,26 +74,26 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
 
     @Override
     public @NonNull GlUniformBlock bindUniformBlock(String name, int bindingPoint) {
-        int index = GL32C.glGetUniformBlockIndex(this.handle(), name);
+        int index = GL46C.glGetUniformBlockIndex(this.handle(), name);
 
         if (index < 0) {
             throw new NullPointerException("No uniform block exists with name: " + name);
         }
 
-        GL32C.glUniformBlockBinding(this.handle(), index, bindingPoint);
+        GL46C.glUniformBlockBinding(this.handle(), index, bindingPoint);
 
         return new GlUniformBlock(bindingPoint);
     }
 
     @Override
     public GlUniformBlock bindUniformBlockOptional(String name, int bindingPoint) {
-        int index = GL32C.glGetUniformBlockIndex(this.handle(), name);
+        int index = GL46C.glGetUniformBlockIndex(this.handle(), name);
 
         if (index < 0) {
             return null;
         }
 
-        GL32C.glUniformBlockBinding(this.handle(), index, bindingPoint);
+        GL46C.glUniformBlockBinding(this.handle(), index, bindingPoint);
 
         return new GlUniformBlock(bindingPoint);
     }
@@ -105,11 +104,11 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
 
         public Builder(Identifier name) {
             this.name = name;
-            this.program = GL20C.glCreateProgram();
+            this.program = GL46C.glCreateProgram();
         }
 
         public Builder attachShader(GlShader shader) {
-            GL20C.glAttachShader(this.program, shader.handle());
+            GL46C.glAttachShader(this.program, shader.handle());
 
             return this;
         }
@@ -124,17 +123,17 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
          * @return An instantiated shader container as provided by the factory
          */
         public <U> GlProgram<U> link(Function<ShaderBindingContext, U> factory) {
-            GL20C.glLinkProgram(this.program);
+            GL46C.glLinkProgram(this.program);
 
-            String log = GL20C.glGetProgramInfoLog(this.program);
+            String log = GL46C.glGetProgramInfoLog(this.program);
 
             if (!log.isEmpty()) {
                 LOGGER.warn("Program link log for " + this.name + ": " + log);
             }
 
-            int result = GlStateManager.glGetProgrami(this.program, GL20C.GL_LINK_STATUS);
+            int result = GlStateManager.glGetProgrami(this.program, GL46C.GL_LINK_STATUS);
 
-            if (result != GL20C.GL_TRUE) {
+            if (result != GL46C.GL_TRUE) {
                 throw new RuntimeException("Shader program linking failed, see log for details");
             }
 
@@ -142,13 +141,13 @@ public class GlProgram<T> extends GlObject implements ShaderBindingContext {
         }
 
         public Builder bindAttribute(String name, int index) {
-            GL20C.glBindAttribLocation(this.program, index, name);
+            GL46C.glBindAttribLocation(this.program, index, name);
 
             return this;
         }
 
         public Builder bindFragmentData(String name, int index) {
-            GL30C.glBindFragDataLocation(this.program, index, name);
+            GL46C.glBindFragDataLocation(this.program, index, name);
 
             return this;
         }

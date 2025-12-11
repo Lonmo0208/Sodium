@@ -60,7 +60,7 @@ We have an [official Discord community](https://caffeinemc.net/discord) for all 
 
 ## ✅ Hardware Compatibility
 
-We only provide official support for graphics cards which have up-to-date drivers that are compatible with OpenGL 4.5
+We only provide official support for graphics cards which have up-to-date drivers that are compatible with OpenGL 4.6
 or newer. Most graphics cards released in the past 12 years will meet these requirements, including the following:
 
 - AMD Radeon HD 7000 Series (GCN 1) or newer
