@@ -21,7 +21,7 @@ public class GlBufferStreamer {
         this.bufferSize = (long) initialCapacity * stride;
         this.stride = stride;
 
-        if (SodiumClientMod.options().advanced.useAdvancedStagingBuffers && MappedStagingBuffer.isSupported(RenderDevice.INSTANCE)) {
+        if (SodiumClientMod.options().advanced.useAdvancedStagingBuffers && MappedStagingBuffer.isSupported(RenderDevice.INSTANCE) && (GL.getCapabilities().GL_ARB_shader_image_load_store && GL.getCapabilities().glMemoryBarrier != 0L)) {
             this.buffer = commands.createImmutableBuffer(bufferSize, EnumBitField.of(GlBufferStorageFlags.PERSISTENT, GlBufferStorageFlags.MAP_WRITE));
 
             this.mapping = commands.mapBuffer(this.buffer, 0, bufferSize,

@@ -35,6 +35,7 @@ import java.util.function.Predicate;
 public abstract class AbstractBlockRenderContext extends AbstractRenderContext {
     public class BlockEmitter extends MutableQuadViewImpl {
         {
+            data = new int[EncodingFormat.TOTAL_STRIDE];
             clear();
         }
 

@@ -1,15 +1,15 @@
 package net.caffeinemc.mods.sodium.client.config.structure;
 
-import net.caffeinemc.mods.sodium.api.config.option.OptionFlag;
 import net.caffeinemc.mods.sodium.api.config.option.OptionImpact;
-import net.caffeinemc.mods.sodium.client.config.search.*;
+import net.caffeinemc.mods.sodium.client.config.search.SearchIndex;
+import net.caffeinemc.mods.sodium.client.config.search.TextSource;
 import net.caffeinemc.mods.sodium.client.config.value.DependentValue;
 import net.caffeinemc.mods.sodium.client.gui.options.control.Control;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.Collection;
-import java.util.EnumSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public abstract class Option {
@@ -22,7 +22,11 @@ public abstract class Option {
     Config state;
     Control control;
 
-    Option(Identifier id, Collection<Identifier> dependencies, Component name, DependentValue<Boolean> enabled) {
+    Option(
+            Identifier id,
+            Collection<Identifier> dependencies,
+            Component name,
+            DependentValue<Boolean> enabled) {
         if (dependencies.contains(id)) {
             throw new IllegalArgumentException("Option cannot depend on itself");
         }
@@ -85,8 +89,8 @@ public abstract class Option {
 
     public abstract Component getTooltip();
 
-    public EnumSet<OptionFlag> getFlags() {
-        return EnumSet.noneOf(OptionFlag.class);
+    public Set<Identifier> getFlags() {
+        return Set.of();
     }
 
     public void registerTextSources(SearchIndex index, ModOptions modOptions, OptionPage page, OptionGroup optionGroup) {

@@ -9,6 +9,4 @@ import java.util.function.Supplier;
 
 @Mixin(BlockRenderDispatcher.class)
 public interface BlockRenderDispatcherAccessor {
-    @Accessor("specialBlockModelRenderer")
-    Supplier<SpecialBlockModelRenderer> getSpecialRenderers();
 }

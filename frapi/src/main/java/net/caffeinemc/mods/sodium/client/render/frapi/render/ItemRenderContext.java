@@ -23,15 +23,14 @@ import net.caffeinemc.mods.sodium.api.texture.SpriteUtil;
 import net.caffeinemc.mods.sodium.api.util.ColorMixer;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
-import net.caffeinemc.mods.sodium.client.render.model.EncodingFormat;
+import net.caffeinemc.mods.sodium.client.render.model.*;
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MeshViewImpl;
-import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
-import net.caffeinemc.mods.sodium.client.render.model.AbstractRenderContext;
-import net.caffeinemc.mods.sodium.client.render.model.QuadEncoder;
 import net.caffeinemc.mods.sodium.client.render.texture.SpriteFinderCache;
 import net.caffeinemc.mods.sodium.mixin.frapi.ItemRendererAccessor;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MeshView;
+import net.fabricmc.fabric.api.renderer.v1.mesh.QuadAtlas;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
+import net.fabricmc.fabric.api.renderer.v1.render.ItemRenderTypeGetter;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -60,6 +59,7 @@ public class ItemRenderContext extends AbstractRenderContext {
     /** Value vanilla uses for item rendering.  The only sensible choice, of course.  */
     private static final long ITEM_RANDOM_SEED = 42L;
     private static final int GLINT_COUNT = ItemStackRenderState.FoilType.values().length;
+    private @Nullable ItemRenderTypeGetter renderTypeGetter;
 
     public class ItemEmitter extends MutableQuadViewImpl {
         {
@@ -107,7 +107,7 @@ public class ItemRenderContext extends AbstractRenderContext {
         return editorQuad;
     }
 
-    public void renderItem(ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, int[] colors, List<BakedQuad> vanillaQuads, MeshView mesh, RenderType layer, ItemStackRenderState.FoilType glint, boolean ignoreQuadGlint) {
+    public void renderItem(ItemDisplayContext displayContext, PoseStack poseStack, MultiBufferSource bufferSource, int lightmap, int overlay, int[] colors, List<BakedQuad> vanillaQuads, MeshView mesh, RenderType layer, ItemStackRenderState.FoilType glint, @Nullable ItemRenderTypeGetter renderTypeGetter, boolean ignoreQuadGlint) {
         this.transformMode = displayContext;
         matPosition = poseStack.last().pose();
         this.poseStack = poseStack;
@@ -119,7 +119,7 @@ public class ItemRenderContext extends AbstractRenderContext {
         this.overlay = overlay;
         this.colors = colors;
         this.ignoreQuadGlint = ignoreQuadGlint;
-
+        this.renderTypeGetter = renderTypeGetter;
 
         defaultLayer = layer;
         defaultGlint = glint;
@@ -129,6 +129,7 @@ public class ItemRenderContext extends AbstractRenderContext {
         this.poseStack = null;
         this.bufferSource = null;
         this.colors = null;
+        this.renderTypeGetter = null;
 
         this.specialGlintEntry = null;
         Arrays.fill(vertexConsumerCache, null);
@@ -151,11 +152,11 @@ public class ItemRenderContext extends AbstractRenderContext {
 
     private void renderQuad(MutableQuadViewImpl quad) {
         final boolean emissive = quad.emissive();
-        final VertexConsumer vertexConsumer = getVertexConsumer(quad.getRenderType(), quad.glint());
+        final VertexConsumer vertexConsumer = getVertexConsumer(quad.getQuadAtlas(), quad.getRenderType(), quad.glint());
 
         tintQuad(quad);
         shadeQuad(quad, emissive);
-        bufferQuad(quad, vertexConsumer);
+        bufferQuad(quad, vertexConsumer, quad.getQuadAtlas() == SodiumQuadAtlas.ITEM);
     }
 
     private void tintQuad(MutableQuadViewImpl quad) {
@@ -184,9 +185,9 @@ public class ItemRenderContext extends AbstractRenderContext {
         }
     }
 
-    private void bufferQuad(MutableQuadViewImpl quad, VertexConsumer vertexConsumer) {
+    private void bufferQuad(MutableQuadViewImpl quad, VertexConsumer vertexConsumer, boolean wasItemAtlas) {
         QuadEncoder.writeQuadVertices(quad, vertexConsumer, overlay, matPosition, trustedNormals, matNormal);
-        var sprite = quad.sprite(SpriteFinderCache.forBlockAtlas());
+        var sprite = quad.sprite(wasItemAtlas ? SpriteFinderCache.forItemAtlas() : SpriteFinderCache.forBlockAtlas());
         if (sprite != null) {
             SpriteUtil.INSTANCE.markSpriteActive(sprite);
         }
@@ -197,37 +198,43 @@ public class ItemRenderContext extends AbstractRenderContext {
      * in {@code RenderLayers.getEntityBlockLayer}. Layers other than
      * translucent are mapped to cutout.
      */
-    private VertexConsumer getVertexConsumer(@Nullable ChunkSectionLayer blendMode, @Nullable ItemStackRenderState.FoilType glintMode) {
-        RenderType type;
+    private VertexConsumer getVertexConsumer(SodiumQuadAtlas quadAtlas, @Nullable ChunkSectionLayer quadRenderLayer, ItemStackRenderState.@Nullable FoilType quadGlint) {
+        RenderType layer;
         ItemStackRenderState.FoilType glint;
 
-        if (blendMode == null) {
-            type = defaultLayer;
+        if (renderTypeGetter != null) {
+            layer = renderTypeGetter.renderType(quadAtlas == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM, quadRenderLayer);
+
+            if (layer == null) {
+                layer = defaultLayer;
+            }
         } else {
-            type = RenderLayerHelper.getEntityBlockLayer(blendMode);
+            layer = defaultLayer;
         }
 
-        if (glintMode == null || ignoreQuadGlint) {
+        if (ignoreQuadGlint || quadGlint == null) {
             glint = defaultGlint;
         } else {
-            glint = glintMode;
+            glint = quadGlint;
         }
 
         int cacheIndex;
 
-        if (type == Sheets.translucentItemSheet()) {
+        if (layer == Sheets.translucentItemSheet()) {
             cacheIndex = 0;
-        } else if (type == Sheets.cutoutBlockSheet()) {
+        } else if (layer == Sheets.cutoutBlockSheet()) {
             cacheIndex = GLINT_COUNT;
-        } else {
+        } else if (layer == Sheets.translucentBlockItemSheet()) {
             cacheIndex = 2 * GLINT_COUNT;
+        } else {
+            return createVertexConsumer(layer, glint);
         }
 
         cacheIndex += glint.ordinal();
         VertexConsumer vertexConsumer = vertexConsumerCache[cacheIndex];
 
         if (vertexConsumer == null) {
-            vertexConsumer = createVertexConsumer(type, glint);
+            vertexConsumer = createVertexConsumer(layer, glint);
             vertexConsumerCache[cacheIndex] = vertexConsumer;
         }
 
