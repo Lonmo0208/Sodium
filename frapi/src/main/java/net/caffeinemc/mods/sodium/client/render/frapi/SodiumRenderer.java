@@ -31,6 +31,7 @@ import net.fabricmc.fabric.api.renderer.v1.mesh.MutableMesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.render.BlockVertexConsumerProvider;
 import net.fabricmc.fabric.api.renderer.v1.render.FabricBlockModelRenderer;
+import net.fabricmc.fabric.api.renderer.v1.render.ItemRenderTypeGetter;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderLayerHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -84,8 +85,15 @@ public class SodiumRenderer implements Renderer {
             float blue = (tint & 255) / 255.0F;
 
             FabricBlockModelRenderer.render(poseStack.last(), RenderLayerHelper.entityDelegate(multiBufferSource), model, red, green, blue, light, overlay, blockView, pos, state);
-            ((BlockRenderDispatcherAccessor) renderManager).getSpecialRenderers().get().renderByBlock(state.getBlock(), ItemDisplayContext.NONE, poseStack, Minecraft.getInstance().gameRenderer.getSubmitNodeStorage(), light, overlay, 0);
-        }
+            }
+    }
+
+    @Override
+    public void setLayerRenderTypeGetter(
+            ItemStackRenderState.LayerRenderState layer,
+            ItemRenderTypeGetter renderTypeGetter
+    ) {
+        ((AccessLayerRenderState) layer).fabric_setRenderTypeGetter(renderTypeGetter);
     }
 
     @Override

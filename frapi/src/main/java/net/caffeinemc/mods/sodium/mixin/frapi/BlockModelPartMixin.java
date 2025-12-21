@@ -2,6 +2,7 @@ package net.caffeinemc.mods.sodium.mixin.frapi;
 
 import net.caffeinemc.mods.sodium.client.render.frapi.SodiumRenderer;
 import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.ExtendedMutableQuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.frapi.wrapper.MutableQuadViewWrapper;
 import net.caffeinemc.mods.sodium.client.render.model.AbstractBlockRenderContext;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
@@ -18,7 +19,7 @@ import java.util.function.Predicate;
 public interface BlockModelPartMixin extends FabricBlockModelPart {
     @Override
     default void emitQuads(QuadEmitter emitter, Predicate<@Nullable Direction> cullTest) {
-        if (emitter instanceof AbstractBlockRenderContext.BlockEmitter be) {
+        if (emitter instanceof MutableQuadViewWrapper wr && wr.getOriginal() instanceof AbstractBlockRenderContext.BlockEmitter be) {
             be.emitPart((BlockModelPart) this, cullTest, SodiumRenderer.BUFFERER);
         } else {
             FabricBlockModelPart.super.emitQuads(emitter, cullTest);

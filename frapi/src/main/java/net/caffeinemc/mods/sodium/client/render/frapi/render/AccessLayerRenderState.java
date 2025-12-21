@@ -16,7 +16,10 @@
 package net.caffeinemc.mods.sodium.client.render.frapi.render;
 
 import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableMeshImpl;
+import net.fabricmc.fabric.api.renderer.v1.render.ItemRenderTypeGetter;
 
 public interface AccessLayerRenderState {
     MutableMeshImpl fabric_getMutableMesh();
+
+    void fabric_setRenderTypeGetter(ItemRenderTypeGetter renderTypeGetter);
 }

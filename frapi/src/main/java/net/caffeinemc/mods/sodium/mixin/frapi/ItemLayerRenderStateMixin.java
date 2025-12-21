@@ -24,6 +24,7 @@ import net.caffeinemc.mods.sodium.client.render.frapi.mesh.MutableMeshImpl;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.AccessLayerRenderState;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.ItemRenderContext;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.OrderedSubmitNodeCollectorExtension;
+import net.fabricmc.fabric.api.renderer.v1.render.ItemRenderTypeGetter;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -31,6 +32,7 @@ import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.world.item.ItemDisplayContext;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,16 +47,21 @@ public abstract class ItemLayerRenderStateMixin implements FabricLayerRenderStat
     @Unique
     private final MutableMeshImpl mutableMesh = new MutableMeshImpl();
 
+    @Unique
+    @Nullable
+    private ItemRenderTypeGetter renderTypeGetter = null;
+
     @Inject(method = "clear()V", at = @At("RETURN"))
     private void onReturnClear(CallbackInfo ci) {
         mutableMesh.clear();
+        renderTypeGetter = null;
     }
 
-    @Redirect(method = "submit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitItem(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/item/ItemDisplayContext;III[ILjava/util/List;Lnet/minecraft/client/renderer/RenderType;Lnet/minecraft/client/renderer/item/ItemStackRenderState$FoilType;)V"))
+    @Redirect(method = "submit", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/SubmitNodeCollector;submitItem(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/item/ItemDisplayContext;III[ILjava/util/List;Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/item/ItemStackRenderState$FoilType;)V"))
     private void submitItemProxy(SubmitNodeCollector instance, PoseStack poseStack, ItemDisplayContext displayContext, int light, int overlay, int outlineColor, int[] tints, List<BakedQuad> quads, RenderType layer, ItemStackRenderState.FoilType glint) {
         if (mutableMesh.size() > 0 && instance instanceof OrderedSubmitNodeCollectorExtension access) {
             // We don't have to copy the mesh here because vanilla doesn't copy the tint array or quad list either.
-            access.fabric_submitItem(poseStack, displayContext, light, overlay, outlineColor, tints, quads, layer, glint, mutableMesh);
+            access.fabric_submitItem(poseStack, displayContext, light, overlay, outlineColor, tints, quads, layer, glint, mutableMesh, renderTypeGetter);
         } else {
             instance.submitItem(poseStack, displayContext, light, overlay, outlineColor, tints, quads, layer, glint);
         }
@@ -63,5 +70,10 @@ public abstract class ItemLayerRenderStateMixin implements FabricLayerRenderStat
     @Override
     public MutableMeshImpl fabric_getMutableMesh() {
         return mutableMesh;
+    }
+
+    @Override
+    public void fabric_setRenderTypeGetter(ItemRenderTypeGetter renderTypeGetter) {
+        this.renderTypeGetter = renderTypeGetter;
     }
 }

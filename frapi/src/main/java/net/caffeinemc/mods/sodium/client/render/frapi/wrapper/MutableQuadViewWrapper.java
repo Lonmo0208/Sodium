@@ -3,15 +3,14 @@ package net.caffeinemc.mods.sodium.client.render.frapi.wrapper;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.caffeinemc.mods.sodium.client.render.model.MutableQuadViewImpl;
 import net.caffeinemc.mods.sodium.client.render.model.QuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumQuadAtlas;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadTransform;
-import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
-import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
+import net.fabricmc.fabric.api.renderer.v1.mesh.*;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import org.jspecify.annotations.Nullable;
 
@@ -122,6 +121,12 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
     }
 
     @Override
+    public QuadEmitter atlas(QuadAtlas quadAtlas) {
+        mutableQuad.setQuadAtlas(quadAtlas == QuadAtlas.BLOCK ? SodiumQuadAtlas.BLOCK : SodiumQuadAtlas.ITEM);
+        return this;
+    }
+
+    @Override
     public QuadEmitter tintIndex(int tintIndex) {
         mutableQuad.setTintIndex(tintIndex);
         return this;
@@ -135,13 +140,7 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
 
     @Override
     public QuadEmitter copyFrom(QuadView quad) {
-        mutableQuad.copyFrom((QuadViewImpl) quad);
-        return this;
-    }
-
-    @Override
-    public QuadEmitter fromVanilla(int[] vertexData, int startIndex) {
-        mutableQuad.fromVanilla(vertexData, startIndex);
+        mutableQuad.copyFrom(((QuadViewWrapper) quad).getOriginal());
         return this;
     }
 
@@ -177,6 +176,12 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
         }
     }
 
+    @Override
+    public QuadEmitter spriteBake(TextureAtlasSprite sprite, int bakeFlags) {
+        mutableQuad.spriteBake(sprite, bakeFlags);
+        return this;
+    }
+
     /**
      * Apply transforms and then if transforms return true, emit the quad without clearing the underlying data.
      */
@@ -196,4 +201,10 @@ public class MutableQuadViewWrapper extends QuadViewWrapper implements QuadEmitt
     public MutableQuadViewImpl getOriginal() {
         return mutableQuad;
     }
+
+    @Override
+    public QuadAtlas atlas() {
+        return mutableQuad.getQuadAtlas() == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM;
+    }
+
 }

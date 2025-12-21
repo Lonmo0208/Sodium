@@ -11,6 +11,7 @@ import net.minecraft.data.AtlasIds;
  */
 public class SpriteFinderCache {
     private static SodiumSpriteFinder blockAtlasSpriteFinder;
+    private static SodiumSpriteFinder itemAtlasSpriteFinder;
 
     public static SodiumSpriteFinder forBlockAtlas() {
         if (blockAtlasSpriteFinder == null) {
@@ -20,7 +21,19 @@ public class SpriteFinderCache {
         return blockAtlasSpriteFinder;
     }
 
+    public static SodiumSpriteFinder forItemAtlas() {
+        if (itemAtlasSpriteFinder == null) {
+            itemAtlasSpriteFinder = ((ExtendedTextureAtlas) Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.ITEMS)).sodium$getSpriteFinder();
+        }
+
+        return itemAtlasSpriteFinder;
+    }
+
     public static void resetSpriteFinder() {
         blockAtlasSpriteFinder = null;
+    }
+
+    public static void resetItemSpriteFinder() {
+        itemAtlasSpriteFinder = null;
     }
 }

@@ -1,7 +1,9 @@
 package net.caffeinemc.mods.sodium.client.render.frapi.wrapper;
 
 import net.caffeinemc.mods.sodium.client.render.model.QuadViewImpl;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumQuadAtlas;
 import net.caffeinemc.mods.sodium.client.render.model.SodiumShadeMode;
+import net.fabricmc.fabric.api.renderer.v1.mesh.QuadAtlas;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
 import net.fabricmc.fabric.api.renderer.v1.mesh.ShadeMode;
 import net.fabricmc.fabric.api.util.TriState;
@@ -151,6 +153,11 @@ public class QuadViewWrapper implements QuadView {
     }
 
     @Override
+    public QuadAtlas atlas() {
+        return quad.getQuadAtlas() == SodiumQuadAtlas.BLOCK ? QuadAtlas.BLOCK : QuadAtlas.ITEM;
+    }
+
+    @Override
     public int tintIndex() {
         return quad.getTintIndex();
     }
@@ -158,11 +165,6 @@ public class QuadViewWrapper implements QuadView {
     @Override
     public int tag() {
         return quad.getTag();
-    }
-
-    @Override
-    public void toVanilla(int[] target, int startIndex) {
-        quad.toVanilla(target, startIndex);
     }
 
     public QuadViewImpl getOriginal() {
