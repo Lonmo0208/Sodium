@@ -111,16 +111,6 @@ public class NonTerrainBlockRenderContext extends AbstractBlockRenderContext {
         return vertexConsumer.getBuffer(blendMode == null ? defaultRenderType : blendMode);
     }
 
-    private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {
-        return switch (defaultRenderType) {
-            case SOLID -> RenderType.solid();
-            case CUTOUT_MIPPED -> RenderType.cutoutMipped();
-            case CUTOUT -> RenderType.cutout();
-            case TRANSLUCENT -> RenderType.translucentMovingBlock();
-            case TRIPWIRE -> RenderType.tripwire();
-        };
-    }
-
     private void tintQuad(MutableQuadViewImpl quad) {
         if (quad.getTintIndex() != -1) {
             final int blockColor = 0xFF000000 | this.colorMap.getColor(this.state, this.level, this.pos, quad.getTintIndex());

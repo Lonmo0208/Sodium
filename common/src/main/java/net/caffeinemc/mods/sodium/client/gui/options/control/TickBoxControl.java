@@ -5,7 +5,6 @@ import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
 import net.caffeinemc.mods.sodium.client.gui.ColorTheme;
 import net.caffeinemc.mods.sodium.client.gui.Colors;
-import net.caffeinemc.mods.sodium.client.gui.widgets.OptionListWidget;
 import net.caffeinemc.mods.sodium.client.util.Dim2i;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,13 +51,17 @@ public class TickBoxControl implements Control {
         public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
             super.render(graphics, mouseX, mouseY, delta);
 
+            if (!this.option.showControl()) {
+                return;
+            }
+
             final int x = this.getLimitX() - 16;
             final int y = this.getCenterY() - 5;
             final int xEnd = x + 10;
             final int yEnd = y + 10;
 
             final boolean enabled = this.option.isEnabled();
-            final boolean ticked = enabled && this.option.getValidatedValue();
+            final boolean ticked = this.option.getValidatedValue();
 
             final int color;
 
@@ -72,7 +75,22 @@ public class TickBoxControl implements Control {
                 this.drawRect(graphics, x + 2, y + 2, xEnd - 2, yEnd - 2, color);
             }
 
-            this.drawBorder(graphics, x, y, xEnd, yEnd, color);
+            if (enabled) {
+                this.drawBorder(graphics, x, y, xEnd, yEnd, color);
+            } else {
+                var size = 3;
+                graphics.fill(x, y, x + size, y + 1, color);
+                graphics.fill(x, y, x + 1, y + size, color);
+
+                graphics.fill(xEnd - size, y, xEnd, y + 1, color);
+                graphics.fill(xEnd - 1, y, xEnd, y + size, color);
+
+                graphics.fill(x, yEnd - 1, x + size, yEnd, color);
+                graphics.fill(x, yEnd - size, x + 1, yEnd, color);
+
+                graphics.fill(xEnd - size, yEnd - 1, xEnd, yEnd, color);
+                graphics.fill(xEnd - 1, yEnd - size, xEnd, yEnd, color);
+            }
         }
 
         @Override
@@ -98,7 +116,6 @@ public class TickBoxControl implements Control {
         }
 
         private void toggleControl() {
-            this.playClickSound();
             this.playClickSound();
 
             this.option.modifyValue(!this.option.getValidatedValue());

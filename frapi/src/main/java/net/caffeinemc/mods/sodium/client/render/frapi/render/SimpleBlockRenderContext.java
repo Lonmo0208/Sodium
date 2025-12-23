@@ -98,16 +98,6 @@ public class SimpleBlockRenderContext extends AbstractBlockRenderContext {
         SpriteUtil.INSTANCE.markSpriteActive(quad.sprite(SpriteFinderCache.forBlockAtlas()));
     }
 
-    private RenderType toRenderLayer(ChunkSectionLayer defaultRenderType) {
-        return switch (defaultRenderType) {
-            case SOLID -> RenderType.solid();
-            case CUTOUT_MIPPED -> RenderType.cutoutMipped();
-            case CUTOUT -> RenderType.cutout();
-            case TRANSLUCENT -> RenderType.translucentMovingBlock();
-            case TRIPWIRE -> RenderType.tripwire();
-        };
-    }
-
     public void bufferModel(PoseStack.Pose entry, BlockVertexConsumerProvider vertexConsumers, BlockStateModel model, float red, float green, float blue, int light, int overlay, BlockAndTintGetter blockView, BlockPos pos, BlockState state) {
         matrices = entry;
         this.overlay = overlay;

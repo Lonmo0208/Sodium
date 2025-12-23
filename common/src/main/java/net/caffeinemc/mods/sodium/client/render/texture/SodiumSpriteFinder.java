@@ -19,6 +19,7 @@ package net.caffeinemc.mods.sodium.client.render.texture;
 import java.util.function.Predicate;
 
 import net.caffeinemc.mods.sodium.client.model.quad.ModelQuadView;
+import net.caffeinemc.mods.sodium.client.render.model.SodiumQuadAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -47,4 +48,6 @@ public interface SodiumSpriteFinder {
      * faster if you already have the centroid or another appropriate value.
      */
     TextureAtlasSprite find(float u, float v);
+
+    SodiumQuadAtlas getAtlas();
 }

@@ -1,5 +1,6 @@
 package net.caffeinemc.mods.sodium.mixin.core.render;
 
+import net.caffeinemc.mods.sodium.client.render.model.SodiumQuadAtlas;
 import net.caffeinemc.mods.sodium.client.render.texture.ExtendedTextureAtlas;
 import net.caffeinemc.mods.sodium.client.render.texture.SodiumSpriteFinder;
 import net.caffeinemc.mods.sodium.client.render.texture.SodiumSpriteFinderImpl;
@@ -12,6 +13,7 @@ import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -31,15 +33,22 @@ public class TextureAtlasMixin implements ExtendedTextureAtlas {
     @Nullable
     private TextureAtlasSprite missingSprite;
 
+    @Unique
+    private boolean isBlocks = false;
+
     @Inject(method = "upload", at = @At("RETURN"))
     private void sodium$deleteSpriteFinder(SpriteLoader.Preparations preparations, CallbackInfo ci) {
         if (this.location.equals(TextureAtlas.LOCATION_BLOCKS)) {
             SpriteFinderCache.resetSpriteFinder();
+            this.isBlocks = true;
+        } else if (this.location.equals(TextureAtlas.LOCATION_ITEMS)) {
+            SpriteFinderCache.resetItemSpriteFinder();
+            this.isBlocks = false;
         }
     }
 
     @Override
     public SodiumSpriteFinder sodium$getSpriteFinder() {
-        return new SodiumSpriteFinderImpl(this.texturesByName, this.missingSprite);
+        return new SodiumSpriteFinderImpl(this.texturesByName, this.missingSprite, isBlocks ? SodiumQuadAtlas.BLOCK : SodiumQuadAtlas.ITEM);
     }
 }

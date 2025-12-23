@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.client.render.frapi.render.MeshItemCommand;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.OrderedSubmitNodeCollectorExtension;
 import net.caffeinemc.mods.sodium.client.render.frapi.render.SubmitNodeCollectionExtension;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MeshView;
+import net.fabricmc.fabric.api.renderer.v1.render.ItemRenderTypeGetter;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.SubmitNodeCollection;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -34,9 +35,9 @@ public class SubmitNodeCollectionMixin implements OrderedSubmitNodeCollectorExte
     }
 
     @Override
-    public void fabric_submitItem(PoseStack matrices, ItemDisplayContext displayContext, int light, int overlay, int outlineColors, int[] tintLayers, List<BakedQuad> quads, RenderType renderLayer, ItemStackRenderState.FoilType foilType, MeshView mesh) {
+    public void fabric_submitItem(PoseStack matrices, ItemDisplayContext displayContext, int light, int overlay, int outlineColors, int[] tintLayers, List<BakedQuad> quads, RenderType renderLayer, ItemStackRenderState.FoilType glintType, MeshView mesh, ItemRenderTypeGetter renderTypeGetter) {
         wasUsed = true;
-        meshItemCommands.add(new MeshItemCommand(matrices.last().copy(), displayContext, light, overlay, outlineColors, tintLayers, quads, renderLayer, foilType, mesh));
+        meshItemCommands.add(new MeshItemCommand(matrices.last().copy(), displayContext, light, overlay, outlineColors, tintLayers, quads, renderLayer, glintType, mesh, renderTypeGetter));
     }
 
     @Override

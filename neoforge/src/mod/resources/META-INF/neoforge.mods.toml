@@ -23,28 +23,6 @@ provides = ["indium"]
 [modproperties.sodium]
 "fabric-renderer-api-v1:contains_renderer" = true
 
-[[dependencies.sodium]]
-modId = "minecraft"
-type = "required"
-versionRange = "1.21.4"
-ordering = "NONE"
-side = "CLIENT"
-
-[[dependencies.sodium]]
-modId = "neoforge"
-type = "required"
-versionRange = "[21.4.3-beta,)"
-ordering = "NONE"
-side = "CLIENT"
-
-[[dependencies.sodium]]
-modId = "embeddium"
-type = "incompatible"
-reason = "Sodium and Embeddium cannot be used together. Please remove Embeddium."
-versionRange = "[0.0.1,)"
-ordering = "NONE"
-side = "CLIENT"
-
 [[mixins]]
 config = "sodium-common.mixins.json"
 
