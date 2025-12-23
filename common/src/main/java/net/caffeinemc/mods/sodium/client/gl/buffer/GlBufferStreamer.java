@@ -5,6 +5,7 @@ import net.caffeinemc.mods.sodium.client.gl.arena.staging.MappedStagingBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.caffeinemc.mods.sodium.client.gl.device.RenderDevice;
 import net.caffeinemc.mods.sodium.client.gl.util.EnumBitField;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL46C;
 import org.lwjgl.system.MemoryUtil;
 
