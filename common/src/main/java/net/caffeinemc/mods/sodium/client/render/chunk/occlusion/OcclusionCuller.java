@@ -209,24 +209,14 @@ public class OcclusionCuller {
         return clamped;
     }
 
-    // The bounding box of a chunk section must be large enough to contain all possible geometry within it. Block models
-    // can extend outside a block volume by +/- 1.0 blocks on all axis. Additionally, we make use of a small epsilon
-    // to deal with floating point imprecision during a frustum check (see GH#2132).
-    public static final float CHUNK_SECTION_RADIUS = 8.0f /* chunk bounds */;
-    public static final float CHUNK_SECTION_MARGIN = 1.0f /* maximum model extent */ + 0.125f /* epsilon */;
-    public static final float CHUNK_SECTION_SIZE = CHUNK_SECTION_RADIUS + CHUNK_SECTION_MARGIN;
-
     public static boolean isWithinFrustum(Viewport viewport, RenderSection section) {
-        return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ(),
-                CHUNK_SECTION_SIZE, CHUNK_SECTION_SIZE, CHUNK_SECTION_SIZE);
+        return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ());
     }
 
-    // this bigger chunk section size is only used for frustum-testing nearby sections with large models
-    private static final float CHUNK_SECTION_SIZE_NEARBY = CHUNK_SECTION_RADIUS + 2.0f /* bigger model extent */ + 0.125f /* epsilon */;
+    // Only used for nearby sections with large models
     
     public static boolean isWithinNearbySectionFrustum(Viewport viewport, RenderSection section) {
-        return viewport.isBoxVisible(section.getCenterX(), section.getCenterY(), section.getCenterZ(),
-                CHUNK_SECTION_SIZE_NEARBY, CHUNK_SECTION_SIZE_NEARBY, CHUNK_SECTION_SIZE_NEARBY);
+        return viewport.isBoxVisibleLooser(section.getCenterX(), section.getCenterY(), section.getCenterZ());
     }
 
     // This method visits sections near the origin that are not in the path of the graph traversal
