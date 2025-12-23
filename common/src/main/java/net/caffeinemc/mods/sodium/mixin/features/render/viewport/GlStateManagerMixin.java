@@ -1,7 +1,7 @@
 package net.caffeinemc.mods.sodium.mixin.features.render.viewport;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
-import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL46;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Unique;
@@ -24,7 +24,7 @@ public class GlStateManagerMixin {
             viewportY = y;
             viewportWidth = width;
             viewportHeight = height;
-            GL11.glViewport(x, y, width, height);
+            GL46.glViewport(x, y, width, height);
         }
     }
 }
