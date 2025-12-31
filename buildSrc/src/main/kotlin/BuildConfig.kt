@@ -11,7 +11,7 @@ object BuildConfig {
     val PARCHMENT_VERSION: String? = null
 
     // https://semver.org/
-    var MOD_VERSION: String = "0.8.2"
+    var MOD_VERSION: String = "0.8.3"
 
     fun createVersionString(project: Project): String {
         val builder = StringBuilder()
@@ -23,7 +23,7 @@ object BuildConfig {
             builder.append(MOD_VERSION)
         } else {
             builder.append(MOD_VERSION.substringBefore('-'))
-            builder.append("-GL46-SNAPSHOT")
+            builder.append("-OGL46-SNAPSHOT")
         }
 
         builder.append("+mc").append(MINECRAFT_VERSION)
