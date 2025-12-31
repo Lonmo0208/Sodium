@@ -34,9 +34,9 @@ public class ArenaAggregator {
     private static int freeBufferCount = 0;
 
     // all shared arenas, keyed by stride, and then sorted by the biggest contiguous free block size they have to offer
-    private final DataType index = new DataType("Index", Integer.BYTES, SHARED_INDEX_SIZE);
+    private DataType index = new DataType("Index", Integer.BYTES, SHARED_INDEX_SIZE);
     private final DataType geometry = new DataType("Geometry", ChunkMeshFormats.COMPACT.getVertexFormat().getStride(), SHARED_GEOMETRY_SIZE);
-    private final List<DataType> dataTypes = List.of(this.index, this.geometry);
+    private List<DataType> dataTypes = List.of(this.index, this.geometry);
     private int arenaDefragOffset = 0; // round-robin index for defragmentation
     private int totalCopyCount = 0;
     private long totalCopyBytes = 0;
@@ -157,6 +157,35 @@ public class ArenaAggregator {
 
     public ArenaAggregator(StagingBuffer stagingBuffer) {
         this.stagingBuffer = stagingBuffer;
+
+        this.dataTypes = new ArrayList<>();
+        this.dataTypes.add(this.index);
+        this.dataTypes.add(this.geometry);
+
+        addStrideIfNotExists(8);
+        addStrideIfNotExists(16);
+        addStrideIfNotExists(20);
+        addStrideIfNotExists(24);
+        addStrideIfNotExists(28);
+        addStrideIfNotExists(32);
+        addStrideIfNotExists(36);
+        addStrideIfNotExists(40);
+        addStrideIfNotExists(48);
+    }
+
+    private void addStrideIfNotExists(int stride) {
+        boolean exists = false;
+        for (DataType dt : this.dataTypes) {
+            if (dt.stride == stride) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            long sharedSizeBytes = (long) (this.geometry.sharedSizeBytes *
+                    ((double) stride / this.geometry.stride));
+            this.dataTypes.add(new DataType("Stride-" + stride, stride, sharedSizeBytes));
+        }
     }
 
     public RegionAllocatorHandle getGeometryBufferAllocator(CommandList commands, RenderRegion region, int stride, RegionAllocatorHandle.AllocationChangeConsumer onChange) {
@@ -173,13 +202,22 @@ public class ArenaAggregator {
     }
 
     private DataType getDataTypeForStride(int stride) {
-        if (stride == this.index.stride) {
-            return this.index;
-        } else if (stride == this.geometry.stride) {
-            return this.geometry;
-        } else {
-            throw new IllegalArgumentException("Unsupported stride: " + stride);
+        for (DataType dataType : this.dataTypes) {
+            if (dataType.stride == stride) {
+                return dataType;
+            }
         }
+
+        long sharedSizeBytes = calculateSharedSizeForStride(stride);
+        DataType newDataType = new DataType("Dynamic-Stride-" + stride, stride, sharedSizeBytes);
+        this.dataTypes.add(newDataType);
+
+        return newDataType;
+    }
+
+    private long calculateSharedSizeForStride(int stride) {
+        long baseVertices = this.geometry.sharedSize;
+        return baseVertices * stride;
     }
 
     GlBufferArena getArenaFittingFor(CommandList commands, long requiredCapacity, int stride) {
