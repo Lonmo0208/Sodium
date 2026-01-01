@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 public class GlBufferArena implements AllocatorBase {
-    public static boolean CHECK_ASSERTIONS = false;
+    static final boolean CHECK_ASSERTIONS = false;
 
     // how many segments we require to be present before we calculate an average size
     public static final int MIN_SEGMENTS_FOR_AVG = 16;
@@ -87,7 +87,7 @@ public class GlBufferArena implements AllocatorBase {
         this.capacity = this.arenaBuffer.getSize() / this.stride;
     }
 
-    int receiveSegmentsFrom(CommandList commandList, List<GlBufferSegment> segments, GlMutableBuffer srcBufferObj, RegionAllocatorHandle owner) {
+    void receiveSegmentsFrom(CommandList commandList, List<GlBufferSegment> segments, GlMutableBuffer srcBufferObj, RegionAllocatorHandle owner) {
         this.used = owner.used;
         this.usedSegments = segments.size();
         if (this.used > this.capacity) {
@@ -105,8 +105,6 @@ public class GlBufferArena implements AllocatorBase {
         this.executeCopyCommands(commandList, pendingCopies, srcBufferObj, this.arenaBuffer);
 
         this.finalizeCompactedSegments(endOfFreeHead, segments);
-
-        return pendingCopies.size();
     }
 
     private void finalizeCompactedSegments(long tail, List<GlBufferSegment> usedSegments) {
