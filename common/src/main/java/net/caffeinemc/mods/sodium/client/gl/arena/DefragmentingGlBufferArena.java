@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.gl.arena;
 
-import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.caffeinemc.mods.sodium.client.gl.buffer.GlMutableBuffer;
 import net.caffeinemc.mods.sodium.client.gl.device.CommandList;
 import net.minecraft.client.Minecraft;
@@ -39,7 +38,7 @@ public class DefragmentingGlBufferArena extends GlBufferArena {
     }
 
     public long getBiggestFreeSegmentSize() {
-        return this.freeSegmentsByLength.getHighestSize();
+        return this.freeSegmentsByLength.getLargestSize();
     }
 
     private float calculateFragmentationDegree(Collection<GlBufferSegment> givenSegments) {
@@ -298,6 +297,8 @@ public class DefragmentingGlBufferArena extends GlBufferArena {
             // TODO: in weird rare cases this results in a negative offset, why?
             // run with asserts enabled in mangrove forest: the overlapping segments are probably the cause
             if (freeOffset < totalMoveLength) {
+                CHECK_ASSERTIONS = true;
+                this.checkAssertions();
                 throw new IllegalStateException("Invalid segments resulted in negative offset during defragmentation");
             }
             biggestFree.setOffset(freeOffset - totalMoveLength);
@@ -332,7 +333,7 @@ public class DefragmentingGlBufferArena extends GlBufferArena {
 
     @Override
     GlBufferSegment takeFree(long size) {
-        return this.freeSegmentsByLength.removeFirstFitting(size);
+        return this.freeSegmentsByLength.removeFirstOfSizeAtLeast(size);
     }
 
     GlBufferSegment alloc(long size, RegionAllocatorHandle owner, int ownerIndex) {
@@ -354,6 +355,11 @@ public class DefragmentingGlBufferArena extends GlBufferArena {
         }
         // free space is larger than requested, return new segment at end of free space
         else {
+            if (free.getEnd() < size) {
+                CHECK_ASSERTIONS = true;
+                this.checkAssertions();
+                throw new IllegalStateException("Free segment is smaller than requested size");
+            }
             result = new GlBufferSegment(this, owner, ownerIndex, free.getEnd() - size, size);
             result.setNext(free.getNext());
             result.setPrev(free);
