@@ -1,8 +1,7 @@
 plugins {
     id("multiloader-base")
     id("java-library")
-
-    id("fabric-loom") version ("1.14.1")
+    id("net.fabricmc.fabric-loom") version "1.15.0-alpha.22"
 }
 
 base {
@@ -42,23 +41,18 @@ sourceSets {
 
 repositories {
     mavenLocal()
+    mavenCentral()
 }
 
 dependencies {
-    minecraft(group = "com.mojang", name = "minecraft", version = BuildConfig.MINECRAFT_VERSION)
-    mappings(loom.layered {
-        officialMojangMappings()
+    minecraft("com.mojang:minecraft:${BuildConfig.MINECRAFT_VERSION}")
 
-        if (BuildConfig.PARCHMENT_VERSION != null) {
-            parchment("org.parchmentmc.data:parchment-${BuildConfig.MINECRAFT_VERSION}:${BuildConfig.PARCHMENT_VERSION}@zip")
-        }
-    })
+    compileOnly("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
 
     compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
     annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
 
     compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
-    compileOnly("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
 
     // We need to be careful during pre-launch that we don't touch any Minecraft classes, since other mods
     // will not yet have an opportunity to apply transformations.
@@ -72,9 +66,10 @@ dependencies {
 
 loom {
     accessWidenerPath = file("src/main/resources/sodium-common.accesswidener")
-
-    mixin {
-        useLegacyMixinAp = false
+    mods {
+        create("sodium") {
+            sourceSet(sourceSets["main"])
+        }
     }
 }
 
@@ -119,4 +114,3 @@ exportSourceSet("commonBoot", sourceSets["boot"])
 exportSourceSet("commonDesktop", sourceSets["desktop"])
 
 tasks.jar { enabled = false }
-tasks.remapJar { enabled = false }
