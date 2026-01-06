@@ -1,6 +1,5 @@
 package net.caffeinemc.mods.sodium.client.gui.options.control;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.caffeinemc.mods.sodium.client.config.structure.IntegerOption;
 import net.caffeinemc.mods.sodium.client.config.structure.Option;
 import net.caffeinemc.mods.sodium.client.config.structure.StatefulOption;
@@ -13,16 +12,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
-import org.apache.commons.lang3.Validate;
 
 public class SliderControl implements Control {
     private final IntegerOption option;
 
-    public SliderControl(IntegerOption option, int min, int max, int interval) {
-        Validate.isTrue(max > min, "The maximum value must be greater than the minimum value");
-        Validate.isTrue(interval > 0, "The slider interval must be greater than zero");
-        Validate.isTrue(((max - min) % interval) == 0, "The maximum value must be divisible by the interval");
-
+    public SliderControl(IntegerOption option) {
         this.option = option;
     }
 
@@ -92,13 +86,14 @@ public class SliderControl implements Control {
             // render the label first and then the slider to prevent the highlight rect from darkening the slider
             super.render(graphics, mouseX, mouseY, delta);
 
+            if (!this.option.showControl()) {
+                return;
+            }
+
             if (drawSlider) {
                 this.thumbPosition = this.getThumbPositionForValue(value);
 
-                var range = this.option.getRange();
-                double thumbOffset = Mth.clamp((double) (this.getIntValue() - range.min()) / range.getSpread() * sliderWidth, 0, sliderWidth);
-
-                int thumbX = (int) (sliderX + thumbOffset - THUMB_WIDTH);
+                int thumbX = (int) (sliderX + this.thumbPosition * sliderWidth - THUMB_WIDTH);
                 int trackY = (int) (sliderY + (sliderHeight / 2f) - ((double) TRACK_HEIGHT / 2));
 
                 this.drawRect(graphics, sliderX, trackY, sliderX + sliderWidth, trackY + TRACK_HEIGHT, this.theme.themeLighter);
@@ -135,14 +130,19 @@ public class SliderControl implements Control {
             return this.contentWidth;
         }
 
-        public int getIntValue() {
-            var range = this.option.getRange();
-            return range.min() + (range.step() * (int) Math.round((this.thumbPosition / (1.0D / range.getSpread())) / range.step()));
+        public double getThumbPositionForValue(int value) {
+            var range = this.option.getSteppedValidator();
+            int min = range.min();
+            int max = range.max();
+            return Mth.clamp((double) (value - min) / (max - min), 0.0d, 1.0d);
         }
 
-        public double getThumbPositionForValue(int value) {
-            var range = this.option.getRange();
-            return (value - range.min()) * (1.0D / range.getSpread());
+        private int getValueForThumbPosition() {
+            var range = this.option.getSteppedValidator();
+            int step = range.step();
+            int min = range.min();
+            int max = range.max();
+            return min + (step * (int) Math.round((this.thumbPosition * (max - min)) / step));
         }
 
         @Override
@@ -186,29 +186,32 @@ public class SliderControl implements Control {
         }
 
         private void setValueFromMouse(double d) {
-            this.setValue((d - (double) this.getSliderX()) / (double) this.getSliderWidth());
+            this.setValue(Mth.clamp((d - (double) this.getSliderX()) / (double) this.getSliderWidth(), 0.0D, 1.0D));
         }
 
-        public void setValue(double d) {
-            this.thumbPosition = Mth.clamp(d, 0.0D, 1.0D);
+        public void setValue(double newThumbPosition) {
+            this.thumbPosition = newThumbPosition;
 
-            int value = this.getIntValue();
-
-            if (this.option.getValidatedValue() != value) {
-                this.option.modifyValue(value);
-            }
+            this.option.modifyValue(this.getValueForThumbPosition());
         }
 
         @Override
         public boolean keyPressed(KeyEvent event) {
             if (!isFocused()) return false;
 
-            var range = this.option.getRange();
-            if (event.isLeft()) {
-                this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() - range.step(), range.max(), range.max()));
-                return true;
-            } else if (event.isRight()) {
-                this.option.modifyValue(Mth.clamp(this.option.getValidatedValue() + range.step(), range.min(), range.max()));
+            var range = this.option.getSteppedValidator();
+            var isLeft = event.isLeft();
+            var isRight = event.isRight();
+            if (isLeft || isRight) {
+                var validatedValue = this.option.getValidatedValue();
+                var step = range.step();
+                if (isLeft) {
+                    validatedValue -= step;
+                } else {
+                    validatedValue += step;
+                }
+                this.option.modifyValue(validatedValue);
+                this.option.getValidatedValue();
                 return true;
             }
 

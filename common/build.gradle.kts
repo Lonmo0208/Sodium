@@ -49,8 +49,8 @@ dependencies {
 
     compileOnly("net.fabricmc:fabric-loader:${BuildConfig.FABRIC_LOADER_VERSION}")
 
-    compileOnly("io.github.llamalad7:mixinextras-common:0.3.5")
-    annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")
+    compileOnly("io.github.llamalad7:mixinextras-common:0.5.0")
+    annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0")
 
     compileOnly("net.fabricmc:sponge-mixin:0.13.2+mixin.0.8.5")
 
@@ -85,6 +85,21 @@ fun exportSourceSetJava(name: String, sourceSet: SourceSet) {
     }
 }
 
+fun exportSourceSetSources(name: String, sourceSet: SourceSet) {
+    val configuration = configurations.create("${name}Sources") {
+        isCanBeResolved = true
+        isCanBeConsumed = true
+    }
+
+    val compileTask = tasks.register<Copy>(sourceSet.getTaskName("process", "sources")) {
+        from(sourceSet.allSource)
+        into(file(project.layout.buildDirectory).resolve("sources").resolve(sourceSet.name))
+    }.get()
+    artifacts.add(configuration.name, compileTask.destinationDir) {
+        builtBy(compileTask)
+    }
+}
+
 fun exportSourceSetResources(name: String, sourceSet: SourceSet) {
     val configuration = configurations.create("${name}Resources") {
         isCanBeResolved = true
@@ -105,6 +120,7 @@ fun exportSourceSetResources(name: String, sourceSet: SourceSet) {
 // Exports the compiled output of the source set to the named configuration.
 fun exportSourceSet(name: String, sourceSet: SourceSet) {
     exportSourceSetJava(name, sourceSet)
+    exportSourceSetSources(name, sourceSet)
     exportSourceSetResources(name, sourceSet)
 }
 

@@ -23,7 +23,6 @@ import net.caffeinemc.mods.sodium.client.render.helper.ColorHelper;
 import net.caffeinemc.mods.sodium.client.render.helper.ListStorage;
 import net.caffeinemc.mods.sodium.client.render.helper.TextureHelper;
 import net.caffeinemc.mods.sodium.client.render.texture.SodiumSpriteFinder;
-import net.minecraft.client.model.geom.builders.UVPair;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
@@ -32,10 +31,9 @@ import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.util.TriState;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,6 +66,8 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         return cachedList;
     }
 
+    /** Used for quick clearing of quad buffers. Implicitly has invalid geometry. */
+    static final int[] DEFAULT = EMPTY.clone();
 
     static {
         MutableQuadViewImpl quad = new MutableQuadViewImpl() {
@@ -78,6 +78,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         };
 
         // Start with all zeroes
+        quad.data = DEFAULT;
         // Apply non-zero defaults
         quad.setColor(0, -1);
         quad.setColor(1, -1);
@@ -86,6 +87,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
         quad.setCullFace(null);
         quad.setRenderType(null);
         quad.setDiffuseShade(true);
+        quad.setQuadAtlas(SodiumQuadAtlas.BLOCK);
         quad.setAmbientOcclusion(TriState.DEFAULT);
         quad.setGlint(null);
         quad.setTintIndex(-1);
@@ -111,13 +113,7 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     }
 
     public void clear() {
-        for (int i = 0; i < 4; i++) {
-            positions[i].set(0, 0, 0);
-            colors[i] = 0;
-            uv[i] = 0;
-            light[i] = 0;
-        }
-        maxLightEmission = 0;
+        System.arraycopy(DEFAULT, 0, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
         isGeometryInvalid = true;
         nominalFace = null;
         cachedSprite(null);
@@ -130,18 +126,23 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     }
 
     public MutableQuadViewImpl setPos(int vertexIndex, float x, float y, float z) {
-        positions[vertexIndex].set(x, y, z);
+        final int index = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_X;
+        data[index] = Float.floatToRawIntBits(x);
+        data[index + 1] = Float.floatToRawIntBits(y);
+        data[index + 2] = Float.floatToRawIntBits(z);
         isGeometryInvalid = true;
         return this;
     }
 
     public MutableQuadViewImpl setColor(int vertexIndex, int color) {
-        colors[vertexIndex] = color;
+        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_COLOR] = color;
         return this;
     }
 
     public MutableQuadViewImpl setUV(int vertexIndex, float u, float v) {
-        uv[vertexIndex] = UVPair.pack(u, v);
+        final int i = baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_U;
+        data[i] = Float.floatToRawIntBits(u);
+        data[i + 1] = Float.floatToRawIntBits(v);
         cachedSprite(null);
         return this;
     }
@@ -153,24 +154,24 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     }
 
     public MutableQuadViewImpl setLight(int vertexIndex, int lightmap) {
-        light[vertexIndex] = lightmap;
+        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_LIGHTMAP] = lightmap;
         return this;
     }
 
     protected void normalFlags(int flags) {
-        header = EncodingFormat.normalFlags(header, flags);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.normalFlags(data[baseIndex + HEADER_BITS], flags);
     }
 
     public MutableQuadViewImpl setNormal(int vertexIndex, float x, float y, float z) {
         normalFlags(normalFlags() | (1 << vertexIndex));
-        throw new IllegalStateException("Not implemented as of 1.21.11"); // data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL] = NormI8.pack(x, y, z);
+        data[baseIndex + vertexIndex * VERTEX_STRIDE + VERTEX_NORMAL] = NormI8.pack(x, y, z);
+        return this;
     }
 
     /**
      * Internal helper method. Copies face normals to vertex normals lacking one.
      */
     public final void populateMissingNormals() {
-        throw new IllegalStateException("Not implemented as of 1.21.11"); /*
         final int normalFlags = this.normalFlags();
 
         if (normalFlags == 0b1111) return;
@@ -179,15 +180,15 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
 
         for (int v = 0; v < 4; v++) {
             if ((normalFlags & (1 << v)) == 0) {
-                //data[baseIndex + v * VERTEX_STRIDE + VERTEX_NORMAL] = packedFaceNormal;
+                data[baseIndex + v * VERTEX_STRIDE + VERTEX_NORMAL] = packedFaceNormal;
             }
         }
 
-        normalFlags(0b1111);*/
+        normalFlags(0b1111);
     }
 
     public final MutableQuadViewImpl setCullFace(@Nullable Direction face) {
-        header = EncodingFormat.cullFace(header, face);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.cullFace(data[baseIndex + HEADER_BITS], face);
         setNominalFace(face);
         return this;
     }
@@ -198,49 +199,54 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
     }
 
     public MutableQuadViewImpl setRenderType(@Nullable ChunkSectionLayer renderLayer) {
-        header = EncodingFormat.renderLayer(header, renderLayer);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.renderLayer(data[baseIndex + HEADER_BITS], renderLayer);
         return this;
     }
 
     public MutableQuadViewImpl setEmissive(boolean emissive) {
-        header = EncodingFormat.emissive(header, emissive);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.emissive(data[baseIndex + HEADER_BITS], emissive);
         return this;
     }
 
     public MutableQuadViewImpl setDiffuseShade(boolean shade) {
-        header = EncodingFormat.diffuseShade(header, shade);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.diffuseShade(data[baseIndex + HEADER_BITS], shade);
         return this;
     }
 
     public MutableQuadViewImpl setAmbientOcclusion(TriState ao) {
         Objects.requireNonNull(ao, "ambient occlusion TriState may not be null");
-        header = EncodingFormat.ambientOcclusion(header, ao);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.ambientOcclusion(data[baseIndex + HEADER_BITS], ao);
         return this;
     }
 
-    public MutableQuadViewImpl setGlint(ItemStackRenderState.@Nullable FoilType glint) {
-        header = EncodingFormat.glint(header, glint);
+    public MutableQuadViewImpl setGlint(@Nullable ItemStackRenderState.FoilType glint) {
+        data[baseIndex + HEADER_BITS] = EncodingFormat.glint(data[baseIndex + HEADER_BITS], glint);
         return this;
     }
 
     public MutableQuadViewImpl setShadeMode(SodiumShadeMode mode) {
         Objects.requireNonNull(mode, "ShadeMode may not be null");
-        header = EncodingFormat.shadeMode(header, mode);
+        data[baseIndex + HEADER_BITS] = EncodingFormat.shadeMode(data[baseIndex + HEADER_BITS], mode);
         return this;
     }
 
     public final MutableQuadViewImpl setTintIndex(int tintIndex) {
-        this.tintIndex = tintIndex;
+        data[baseIndex + HEADER_TINT_INDEX] = tintIndex;
+        return this;
+    }
+
+    public final MutableQuadViewImpl setQuadAtlas(SodiumQuadAtlas atlas) {
+        data[baseIndex + HEADER_BITS] = EncodingFormat.quadAtlas(data[baseIndex + HEADER_BITS], atlas);
         return this;
     }
 
     public final MutableQuadViewImpl setTag(int tag) {
-        this.tag = tag;
+        data[baseIndex + HEADER_TAG] = tag;
         return this;
     }
 
     public MutableQuadViewImpl copyFrom(QuadViewImpl q) {
-        //System.arraycopy(q.data, q.baseIndex, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
+        System.arraycopy(q.data, q.baseIndex, data, baseIndex, EncodingFormat.TOTAL_STRIDE);
         nominalFace = q.nominalFace;
 
         isGeometryInvalid = q.isGeometryInvalid;
@@ -255,38 +261,52 @@ public abstract class MutableQuadViewImpl extends QuadViewImpl implements ListSt
             cachedSprite(null);
         }
 
-        throw new IllegalStateException("Not implemented as of 1.21.11");
+
+        return this;
+    }
+
+    private void fromVanillaInternal(BakedQuadView quadData) {
+        boolean hasNormals = false;
+
+        for (int i = 0; i < 4; i++) {
+            setPos(i, quadData.getX(i), quadData.getY(i), quadData.getZ(i));
+            setColor(i, quadData.getColor(i));
+            setUV(i, quadData.getTexU(i), quadData.getTexV(i));
+            setLight(i, quadData.getMaxLightQuad(i));
+
+            int normal = quadData.getVertexNormal(i);
+            if (normal != 0) hasNormals = true;
+            setNormal(i, NormI8.unpackX(normal), NormI8.unpackY(normal), NormI8.unpackZ(normal));
+        }
+
+        normalFlags(hasNormals ? 0b1111 : 0);
     }
 
     public final MutableQuadViewImpl fromBakedQuad(BakedQuad quad) {
-        for (int i = 0; i < 4; i++) {
-            positions[i].set(quad.position(i));
-            uv[i] = quad.packedUV(i);
-            colors[i] = 0xFFFFFFFF;
-        }
-        Arrays.fill(light, 0);
+        fromVanillaInternal(((BakedQuadView) (Object) quad));
         setNominalFace(quad.direction());
         setDiffuseShade(quad.shade());
         setTintIndex(quad.tintIndex());
         setAmbientOcclusion(((BakedQuadView) (Object) quad).hasAO() ? TriState.DEFAULT : TriState.FALSE); // TODO: TRUE, or DEFAULT?
 
+        setEmissive(quad.lightEmission() == 15);
+
         // Copy geometry cached inside the quad
         BakedQuadView bakedView = (BakedQuadView) (Object) quad;
         NormI8.unpack(bakedView.getFaceNormal(), faceNormal);
-        packedNormal = bakedView.getFaceNormal();
-        int headerBits = EncodingFormat.lightFace(header, bakedView.getLightFace());
+        data[baseIndex + HEADER_FACE_NORMAL] = bakedView.getFaceNormal();
+        int headerBits = EncodingFormat.lightFace(data[baseIndex + HEADER_BITS], bakedView.getLightFace());
         headerBits = EncodingFormat.normalFace(headerBits, bakedView.getNormalFace());
-        header = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
+        data[baseIndex + HEADER_BITS] = EncodingFormat.geometryFlags(headerBits, bakedView.getFlags());
         isGeometryInvalid = false;
 
-        int lightEmission = quad.lightEmission();
+        SodiumQuadAtlas atlas = SodiumQuadAtlas.of(quad.sprite().atlasLocation());
 
-        if (lightEmission > 0) {
-            for (int i = 0; i < 4; i++) {
-                setLight(i, LightTexture.lightCoordsWithEmission(getLight(i), lightEmission));
-            }
+        if (atlas == null) {
+            atlas = SodiumQuadAtlas.BLOCK;
         }
 
+        setQuadAtlas(atlas);
         cachedSprite(quad.sprite());
         return this;
     }
