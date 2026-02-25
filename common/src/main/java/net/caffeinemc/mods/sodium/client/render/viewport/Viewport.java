@@ -1,18 +1,18 @@
 package net.caffeinemc.mods.sodium.client.render.viewport;
 
-import net.caffeinemc.mods.sodium.client.render.viewport.frustum.Frustum;
+import net.caffeinemc.mods.sodium.client.render.viewport.frustum.SimpleFrustum;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import org.joml.Vector3d;
 
 public final class Viewport {
-    private final Frustum frustum;
+    private final SimpleFrustum frustum;
     private final CameraTransform transform;
 
     private final SectionPos sectionCoords;
     private final BlockPos blockCoords;
 
-    public Viewport(Frustum frustum, Vector3d position) {
+    public Viewport(SimpleFrustum frustum, Vector3d position) {
         this.frustum = frustum;
         this.transform = new CameraTransform(position.x, position.y, position.z);
 

@@ -1,8 +1,8 @@
 package net.caffeinemc.mods.sodium.client.render.chunk.tree;
 
 import net.caffeinemc.mods.sodium.client.render.chunk.lists.CoordinateSectionVisitor;
-import net.caffeinemc.mods.sodium.client.render.chunk.occlusion.OcclusionCuller;
 import net.caffeinemc.mods.sodium.client.render.viewport.Viewport;
+import net.caffeinemc.mods.sodium.client.render.viewport.frustum.SimpleFrustum;
 import org.joml.FrustumIntersection;
 
 /**
@@ -188,7 +188,7 @@ public class TraversableTree extends Tree {
                     (worldX + childHalfDim) - transform.fracX,
                     (worldY + childHalfDim) - transform.fracY,
                     (worldZ + childHalfDim) - transform.fracZ,
-                    childHalfDim + OcclusionCuller.CHUNK_SECTION_MARGIN);
+                    childHalfDim + SimpleFrustum.CHUNK_SECTION_MARGIN);
             if (intersectionResult == FrustumIntersection.INSIDE) {
                 inside |= INSIDE_FRUSTUM;
             } else {
@@ -238,7 +238,7 @@ public class TraversableTree extends Tree {
                 (x + 8) - transform.fracX,
                 (y + 8) - transform.fracY,
                 (z + 8) - transform.fracZ,
-                OcclusionCuller.CHUNK_SECTION_RADIUS)) {
+                SimpleFrustum.CHUNK_SECTION_RADIUS)) {
             return false;
         }
 

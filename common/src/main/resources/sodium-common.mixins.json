@@ -58,6 +58,7 @@
     "features.render.model.ItemBlockRenderTypesMixin",
     "features.render.model.item.ItemRendererMixin",
     "features.render.particle.QuadParticleRenderStateMixin",
+    "features.render.viewport.GlStateManagerMixin",
     "features.render.world.sky.LevelRendererMixin",
     "features.render.world.clouds.CloudRendererMixin",
     "features.textures.NativeImageAccessor",
