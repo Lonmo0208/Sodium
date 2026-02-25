@@ -69,6 +69,8 @@ public class MixinConfig {
         this.addMixinRule("features.textures", true);
         this.addMixinRule("features.textures.animations", true);
 
+        this.addMixinRule("features.render.viewport", true);
+
         this.addMixinRule("features.world", true);
         this.addMixinRule("features.world.biome", true);
 
