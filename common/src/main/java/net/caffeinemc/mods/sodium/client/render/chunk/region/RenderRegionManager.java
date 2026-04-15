@@ -23,7 +23,10 @@ import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import org.jspecify.annotations.NonNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 public class RenderRegionManager {
     private final Long2ReferenceOpenHashMap<RenderRegion> regions = new Long2ReferenceOpenHashMap<>();
@@ -65,9 +68,9 @@ public class RenderRegionManager {
         var indexUploads = new ArrayList<PendingSectionIndexBufferUpload>();
 
         for (BuilderTaskOutput result : results) {
-            int renderSectionIndex = result.render.getSectionIndex();
+            int renderSectionIndex = result.section.getSectionIndex();
 
-            if (result.render.isDisposed()) {
+            if (result.section.isDisposed()) {
                 throw new IllegalStateException("Render section is disposed");
             }
 
@@ -86,18 +89,18 @@ public class RenderRegionManager {
 
                     int meshTime = -1;
 
-                    if (!result.render.isBuilt()) {
+                    if (!result.section.isBuilt()) {
                         meshTime = Math.toIntExact(System.currentTimeMillis() - region.getCreationTime());
                     }
 
                     if (mesh != null) {
-                        uploads.add(new PendingSectionMeshUpload(result.render, meshTime, mesh, pass,
+                        uploads.add(new PendingSectionMeshUpload(result.section, meshTime, mesh, pass,
                                 new PendingUpload(mesh.getVertexData())));
                     }
                 }
             }
 
-            if (result instanceof ChunkSortOutput indexDataOutput && !indexDataOutput.isReusingUploadedIndexData()) {
+            if (result instanceof ChunkSortOutput indexDataOutput && indexDataOutput.containsNewIndexData()) {
                 var sorter = indexDataOutput.getSorter();
                 if (sorter instanceof SharedIndexSorter sharedIndexSorter) {
                     var storage = region.createStorage(DefaultTerrainRenderPasses.TRANSLUCENT);
@@ -127,7 +130,7 @@ public class RenderRegionManager {
                         continue;
                     }
 
-                    indexUploads.add(new PendingSectionIndexBufferUpload(result.render, new PendingUpload(buffer)));
+                    indexUploads.add(new PendingSectionIndexBufferUpload(result.section, new PendingUpload(buffer)));
                 }
             }
         }
@@ -208,7 +211,7 @@ public class RenderRegionManager {
         var map = new Reference2ReferenceOpenHashMap<RenderRegion, List<BuilderTaskOutput>>();
 
         for (var result : results) {
-            var queue = map.computeIfAbsent(result.render.getRegion(), k -> new ArrayList<>());
+            var queue = map.computeIfAbsent(result.section.getRegion(), k -> new ArrayList<>());
             queue.add(result);
         }
 
@@ -236,6 +239,12 @@ public class RenderRegionManager {
         return this.create(chunkX >> RenderRegion.REGION_WIDTH_SH,
                 chunkY >> RenderRegion.REGION_HEIGHT_SH,
                 chunkZ >> RenderRegion.REGION_LENGTH_SH);
+    }
+
+    public RenderRegion getForChunk(int chunkX, int chunkY, int chunkZ) {
+        return this.regions.get(RenderRegion.key(chunkX >> RenderRegion.REGION_WIDTH_SH,
+                chunkY >> RenderRegion.REGION_HEIGHT_SH,
+                chunkZ >> RenderRegion.REGION_LENGTH_SH));
     }
 
     @NonNull
